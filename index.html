@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Estratégico Mercado Livre - Moda & Fitness</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- 
+    Plano de Estrutura da Aplicação:
+    1. Painel de Controle (Dashboard): Resumo executivo e alertas críticos.
+    2. Calculadora de Precificação Reversa: O coração da ferramenta. Define o preço baseado na margem desejada.
+    3. Simulador de Cenários: 5 casos reais (Ticket baixo, médio, alto, frete grátis, promoções).
+    4. Taxas e Tarifas: Tabelas de referência rápida para comissões e custos de envio.
+    5. SEO e Compliance: Gerador de títulos e verificador de palavras proibidas.
+    
+    Visualização:
+    - Gráficos de Rosca (Doughnut) para visualizar a composição do preço (Custos vs Taxas vs Lucro).
+    - Gráficos de Barra para comparar margens entre Clássico e Premium.
+    -->
+    <!-- CONFIRMAÇÃO: NÃO há uso de SVG ou Mermaid JS. Apenas Chart.js e FontAwesome. -->
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        
+        /* Contêiner de Gráfico Obrigatório para Responsividade */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            height: 300px;
+            max-height: 350px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            transition: all 0.2s;
+        }
+        
+        .nav-btn {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .nav-btn:hover { background-color: #e2e8f0; color: #1e293b; }
+        .nav-btn.active { background-color: #ffe600; color: #2d3277; font-weight: 600; } /* Cores do Meli */
+
+        .input-group label { display: block; font-size: 0.875rem; font-weight: 500; color: #475569; margin-bottom: 0.25rem; }
+        .input-group input, .input-group select { 
+            width: 100%; 
+            padding: 0.5rem; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 0.375rem; 
+            font-size: 0.95rem;
+        }
+        .input-group input:focus { outline: none; border-color: #2d3277; ring: 2px solid #2d3277; }
+
+        .metric-box { padding: 1rem; border-radius: 0.5rem; background-color: #f8fafc; border: 1px solid #e2e8f0; }
+        .metric-value { font-size: 1.25rem; font-weight: 700; color: #1e293b; }
+        .metric-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        /* Utilitários de cores específicas para Meli */
+        .text-meli-blue { color: #2d3277; }
+        .bg-meli-yellow { background-color: #ffe600; }
+        .bg-meli-blue { background-color: #2d3277; }
+        
+        .hidden-section { display: none; }
+        .visible-section { display: block; animation: fadeIn 0.3s ease-in-out; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-slate-800">
+
+    <!-- Sidebar Navegação -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex-col hidden md:flex z-20">
+        <div class="p-6 border-b border-slate-100 bg-meli-yellow">
+            <h1 class="text-xl font-bold text-meli-blue flex items-center gap-2">
+                <i class="fa-solid fa-handshake"></i> Consultor ML
+            </h1>
+            <p class="text-xs text-meli-blue opacity-80 mt-1">Moda Infantil & Fitness</p>
+        </div>
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+            <button onclick="showSection('dashboard')" id="btn-dashboard" class="nav-btn w-full active"><i class="fa-solid fa-chart-line"></i> Resumo Executivo</button>
+            <button onclick="showSection('calculator')" id="btn-calculator" class="nav-btn w-full"><i class="fa-solid fa-calculator"></i> Calculadora de Preço</button>
+            <button onclick="showSection('scenarios')" id="btn-scenarios" class="nav-btn w-full"><i class="fa-solid fa-flask"></i> Simulador de Cenários</button>
+            <button onclick="showSection('fees')" id="btn-fees" class="nav-btn w-full"><i class="fa-solid fa-file-invoice-dollar"></i> Taxas & Comissões</button>
+            <button onclick="showSection('logistics')" id="btn-logistics" class="nav-btn w-full"><i class="fa-solid fa-truck-fast"></i> Mercado Envios</button>
+            <button onclick="showSection('seo')" id="btn-seo" class="nav-btn w-full"><i class="fa-solid fa-magnifying-glass"></i> SEO & Compliance</button>
+        </nav>
+        <div class="p-4 border-t border-slate-100 text-xs text-slate-500 bg-slate-50">
+            <p><strong>Status:</strong> Fabricante</p>
+            <p><strong>Meta Margem:</strong> 20-30%</p>
+            <p class="mt-2 text-[10px]">Atualizado: 2025</p>
+        </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 relative">
+        <!-- Header Mobile -->
+        <div class="md:hidden bg-meli-yellow p-4 flex justify-between items-center shadow-sm z-30">
+            <h1 class="font-bold text-meli-blue">Consultor ML</h1>
+            <button onclick="toggleMobileMenu()" class="text-meli-blue text-xl"><i class="fa-solid fa-bars"></i></button>
+        </div>
+
+        <!-- Menu Mobile Overlay -->
+        <div id="mobile-menu" class="fixed inset-0 bg-black/50 z-40 hidden" onclick="toggleMobileMenu()">
+            <div class="bg-white w-64 h-full shadow-lg pt-4" onclick="event.stopPropagation()">
+                <div class="p-4 border-b border-slate-100 bg-meli-yellow mb-2">
+                    <h1 class="font-bold text-meli-blue">Menu</h1>
+                </div>
+                <nav class="p-2 space-y-1">
+                    <button onclick="showSection('dashboard'); toggleMobileMenu()" class="nav-btn w-full">Resumo Executivo</button>
+                    <button onclick="showSection('calculator'); toggleMobileMenu()" class="nav-btn w-full">Calculadora de Preço</button>
+                    <button onclick="showSection('scenarios'); toggleMobileMenu()" class="nav-btn w-full">Cenários Reais</button>
+                    <button onclick="showSection('fees'); toggleMobileMenu()" class="nav-btn w-full">Taxas & Comissões</button>
+                    <button onclick="showSection('logistics'); toggleMobileMenu()" class="nav-btn w-full">Logística</button>
+                    <button onclick="showSection('seo'); toggleMobileMenu()" class="nav-btn w-full">SEO & Compliance</button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Área de Conteúdo Scrollável -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            
+            <!-- SEÇÃO: DASHBOARD -->
+            <div id="dashboard" class="visible-section space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-meli-blue">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">Resumo Executivo para Fabricantes</h2>
+                    <p class="text-slate-600">Este painel consolida as regras financeiras e operacionais para vender Moda Infantil e Fitness no Mercado Livre Brasil. Seu objetivo é garantir uma **margem líquida de 20-30%**.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="card p-4 border-t-4 border-red-500">
+                        <h3 class="font-bold text-sm text-slate-500">TAXA FIXA (Abaixo de R$79)</h3>
+                        <p class="text-2xl font-bold text-slate-800 mt-1">R$ 6,00</p>
+                        <p class="text-xs text-red-500 mt-1">Por venda + % Comissão</p>
+                    </div>
+                    <div class="card p-4 border-t-4 border-green-500">
+                        <h3 class="font-bold text-sm text-slate-500">FRETE GRÁTIS (Obrigatório)</h3>
+                        <p class="text-2xl font-bold text-slate-800 mt-1">R$ 79,00+</p>
+                        <p class="text-xs text-green-600 mt-1">ML paga até 50% do custo</p>
+                    </div>
+                    <div class="card p-4 border-t-4 border-blue-500">
+                        <h3 class="font-bold text-sm text-slate-500">COMISSÃO (Moda)</h3>
+                        <p class="text-2xl font-bold text-slate-800 mt-1">12% - 19%</p>
+                        <p class="text-xs text-blue-500 mt-1">Depende Clássico/Premium</p>
+                    </div>
+                    <div class="card p-4 border-t-4 border-orange-500">
+                        <h3 class="font-bold text-sm text-slate-500">CUSTO ADS (Recomendado)</h3>
+                        <p class="text-2xl font-bold text-slate-800 mt-1">5% - 10%</p>
+                        <p class="text-xs text-orange-500 mt-1">Sobre o faturamento</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="font-bold text-lg mb-4 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Pontos Críticos de Atenção</h3>
+                        <ul class="space-y-3 text-sm text-slate-700">
+                            <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-1"></i> <strong>Produtos Abaixo de R$ 79:</strong> O custo fixo de R$ 6,00 destrói a margem de itens baratos (ex: meias infantis). Venda em KITS.</li>
+                            <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-1"></i> <strong>Devoluções (Moda):</strong> Custo médio de devolução em moda é alto por "tamanho errado". Considere 3-5% de taxa de devolução no seu custo.</li>
+                            <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-1"></i> <strong>Full:</strong> Obrigatório para ranqueamento competitivo em Fitness e Moda Infantil.</li>
+                            <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-1"></i> <strong>Impostos:</strong> A calculadora assume que a NF é emitida pelo valor cheio da venda, não pelo líquido recebido (regra fiscal padrão).</li>
+                        </ul>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="font-bold text-lg mb-4">Como usar esta ferramenta</h3>
+                        <p class="text-sm text-slate-600 mb-4">Esta aplicação simula a realidade financeira de um fabricante.</p>
+                        <ol class="list-decimal list-inside space-y-2 text-sm text-slate-700">
+                            <li>Vá para a <strong>Calculadora</strong>.</li>
+                            <li>Insira seus Custos de Produção (Tecido, Costura, Embalagem).</li>
+                            <li>Defina sua alíquota de imposto (Simples Nacional).</li>
+                            <li>O sistema calculará o <strong>Preço de Venda Mínimo</strong> para atingir sua meta de lucro.</li>
+                            <li>Use os <strong>Cenários</strong> para ver exemplos reais (ex: Conjunto Fitness vs Kit Infantil).</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO: CALCULADORA -->
+            <div id="calculator" class="hidden-section space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-slate-800">Calculadora de Precificação Inteligente</h2>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full">Fórmula Reversa Ativa</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Entradas (Inputs) -->
+                    <div class="lg:col-span-4 space-y-6">
+                        <div class="card p-5 border-l-4 border-blue-500">
+                            <h3 class="font-bold text-md mb-4 text-slate-700">1. Custos de Produção (Fabricante)</h3>
+                            <div class="space-y-3">
+                                <div class="input-group">
+                                    <label>Custo do Produto (CMV)</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2 text-slate-400">R$</span>
+                                        <input type="number" id="calc-cogs" value="25.00" step="0.10" class="pl-8">
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label>Embalagem & Insumos</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2 text-slate-400">R$</span>
+                                        <input type="number" id="calc-packaging" value="1.50" step="0.10" class="pl-8">
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label>Outros Custos Operacionais</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2 text-slate-400">R$</span>
+                                        <input type="number" id="calc-ops" value="2.00" step="0.10" class="pl-8">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-5 border-l-4 border-meli-yellow">
+                            <h3 class="font-bold text-md mb-4 text-slate-700">2. Variáveis de Mercado</h3>
+                            <div class="space-y-3">
+                                <div class="input-group">
+                                    <label>Tipo de Anúncio</label>
+                                    <select id="calc-listing-type">
+                                        <option value="classic">Clássico (Aprox. 12-14%)</option>
+                                        <option value="premium" selected>Premium (Aprox. 17-19%)</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Imposto (Simples Nacional %)</label>
+                                    <input type="number" id="calc-tax" value="10" step="0.5">
+                                </div>
+                                <div class="input-group">
+                                    <label>Investimento em Ads (% da Venda)</label>
+                                    <input type="number" id="calc-ads" value="8" step="0.5">
+                                </div>
+                                <div class="input-group">
+                                    <label>Margem Líquida Desejada (%)</label>
+                                    <input type="number" id="calc-margin-target" value="25" step="1" class="bg-green-50 font-bold text-green-700">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="calculatePricing()" class="w-full bg-meli-blue text-white py-3 rounded-lg font-bold hover:bg-blue-900 transition shadow-lg">CALCULAR PREÇO IDEAL</button>
+                    </div>
+
+                    <!-- Resultados -->
+                    <div class="lg:col-span-8 space-y-6">
+                        <!-- Card Principal de Preço -->
+                        <div class="card p-6 bg-slate-800 text-white flex flex-col md:flex-row justify-between items-center shadow-xl">
+                            <div>
+                                <h3 class="text-slate-300 text-sm uppercase tracking-wide">Preço de Venda Sugerido</h3>
+                                <div class="text-5xl font-bold mt-2" id="result-price">R$ 0,00</div>
+                                <p class="text-slate-400 text-sm mt-1" id="result-note">Para atingir 25% de margem líquida</p>
+                            </div>
+                            <div class="mt-4 md:mt-0 text-right">
+                                <div class="text-sm text-slate-300">Lucro Líquido por Venda</div>
+                                <div class="text-2xl font-bold text-green-400" id="result-profit-abs">R$ 0,00</div>
+                                <div class="text-xs text-slate-400 mt-1">ROI: <span id="result-roi">0%</span></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Tabela de Detalhamento -->
+                            <div class="card p-5">
+                                <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">Detalhamento Financeiro (DRE)</h3>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between font-bold text-slate-800 bg-slate-100 p-2 rounded">
+                                        <span>Faturamento Bruto</span>
+                                        <span id="dre-revenue">R$ 0,00</span>
+                                    </div>
+                                    <div class="flex justify-between text-red-600 px-2">
+                                        <span>(-) Impostos (Simples)</span>
+                                        <span id="dre-tax">R$ 0,00</span>
+                                    </div>
+                                    <div class="flex justify-between text-red-600 px-2">
+                                        <span>(-) Comissão ML</span>
+                                        <span id="dre-commission">R$ 0,00</span>
+                                    </div>
+                                    <div class="flex justify-between text-red-600 px-2">
+                                        <span>(-) Taxa Fixa ML</span>
+                                        <span id="dre-fixed-fee">R$ 0,00</span>
+                                    </div>
+                                    <div class="flex justify-between text-red-600 px-2">
+                                        <span>(-) Custo de Frete (Subsídio)</span>
+                                        <span id="dre-shipping">R$ 0,00</span>
+                                    </div>
+                                    <div class="flex justify-between text-orange-600 px-2">
+                                        <span>(-) Marketing (Ads)</span>
+                                        <span id="dre-ads">R$ 0,00</span>
+                                    </div>
+                                    <div class="flex justify-between text-blue-600 px-2 pt-2 border-t border-dashed">
+                                        <span>(-) Custo Total Produto (CMV+Emb+Ops)</span>
+                                        <span id="dre-cogs">R$ 0,00</span>
+                                    </div>
+                                    <div class="flex justify-between font-bold text-green-700 bg-green-50 p-2 rounded mt-2 border border-green-200">
+                                        <span>(=) Lucro Líquido Real</span>
+                                        <span id="dre-net-profit">R$ 0,00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Gráfico -->
+                            <div class="card p-5 flex flex-col items-center justify-center">
+                                <h3 class="font-bold text-gray-700 mb-2 w-full text-left">Para onde vai o dinheiro?</h3>
+                                <div class="chart-container">
+                                    <canvas id="priceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO: CENÁRIOS -->
+            <div id="scenarios" class="hidden-section space-y-6">
+                <h2 class="text-2xl font-bold text-slate-800 mb-4">Simulador de Cenários Reais</h2>
+                <p class="text-slate-600 mb-6">Selecione um dos cenários abaixo para carregar automaticamente a calculadora com dados típicos dessas situações. Isso demonstra o impacto de fretes e taxas fixas.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <button onclick="loadScenario('low')" class="card p-4 hover:shadow-md border-b-4 border-gray-400 text-left transition transform hover:-translate-y-1">
+                        <div class="text-xs text-slate-500 font-bold uppercase">Cenário A</div>
+                        <div class="font-bold text-lg text-slate-800">Ticket Baixo</div>
+                        <p class="text-xs text-slate-600 mt-1">Kit Meias Infantis</p>
+                        <p class="text-[10px] text-red-500 mt-2">Cuidado: Taxa Fixa</p>
+                    </button>
+                    <button onclick="loadScenario('mid')" class="card p-4 hover:shadow-md border-b-4 border-blue-400 text-left transition transform hover:-translate-y-1">
+                        <div class="text-xs text-slate-500 font-bold uppercase">Cenário B</div>
+                        <div class="font-bold text-lg text-slate-800">Ticket Médio</div>
+                        <p class="text-xs text-slate-600 mt-1">Kit Bodies Bebê</p>
+                        <p class="text-[10px] text-green-600 mt-2">Zona de Equilíbrio</p>
+                    </button>
+                    <button onclick="loadScenario('high')" class="card p-4 hover:shadow-md border-b-4 border-green-500 text-left transition transform hover:-translate-y-1">
+                        <div class="text-xs text-slate-500 font-bold uppercase">Cenário C</div>
+                        <div class="font-bold text-lg text-slate-800">Fitness Alto</div>
+                        <p class="text-xs text-slate-600 mt-1">Conjunto Legging + Top</p>
+                        <p class="text-[10px] text-slate-500 mt-2">Frete Grátis ML</p>
+                    </button>
+                    <button onclick="loadScenario('promo')" class="card p-4 hover:shadow-md border-b-4 border-purple-500 text-left transition transform hover:-translate-y-1">
+                        <div class="text-xs text-slate-500 font-bold uppercase">Cenário D</div>
+                        <div class="font-bold text-lg text-slate-800">Promoção 10%</div>
+                        <p class="text-xs text-slate-600 mt-1">Impacto no Lucro</p>
+                    </button>
+                    <button onclick="loadScenario('free')" class="card p-4 hover:shadow-md border-b-4 border-orange-500 text-left transition transform hover:-translate-y-1">
+                        <div class="text-xs text-slate-500 font-bold uppercase">Cenário E</div>
+                        <div class="font-bold text-lg text-slate-800">Estratégia Frete</div>
+                        <p class="text-xs text-slate-600 mt-1">Produto de R$ 80,00</p>
+                    </button>
+                </div>
+
+                <div class="card p-6 bg-blue-50 border border-blue-100">
+                    <h3 class="font-bold text-blue-900 mb-2">Análise do Cenário Selecionado:</h3>
+                    <p id="scenario-description" class="text-blue-800 text-sm">Selecione um botão acima para ver a análise estratégica.</p>
+                </div>
+            </div>
+
+            <!-- SEÇÃO: TAXAS -->
+            <div id="fees" class="hidden-section space-y-6">
+                <h2 class="text-2xl font-bold text-slate-800 mb-4">Taxas & Comissões (Referência 2024/25)</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6">
+                        <h3 class="font-bold text-lg mb-4 text-slate-700">Comissão de Venda (Moda/Fitness)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3">Tipo de Anúncio</th>
+                                        <th class="p-3">Comissão %</th>
+                                        <th class="p-3">Benefícios</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td class="p-3 font-medium">Clássico</td>
+                                        <td class="p-3">12% - 14%</td>
+                                        <td class="p-3 text-slate-500">Exposição Média, Sem Parcelamento Sem Juros</td>
+                                    </tr>
+                                    <tr class="bg-yellow-50">
+                                        <td class="p-3 font-medium">Premium</td>
+                                        <td class="p-3 font-bold text-slate-800">17% - 19%</td>
+                                        <td class="p-3 text-slate-500">Exposição Alta, Parcelamento Sem Juros (Até 12x)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-3">* Varia levemente por subcategoria. Roupas geralmente pagam mais que eletrônicos.</p>
+                    </div>
+
+                    <div class="card p-6">
+                        <h3 class="font-bold text-lg mb-4 text-slate-700">Custo de Frete (Vendedor)</h3>
+                        <p class="text-sm text-slate-600 mb-3">Para produtos acima de R$ 79,00, você paga uma parte do frete baseada na sua reputação.</p>
+                        
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between items-center p-2 bg-green-100 rounded border border-green-200">
+                                <span class="font-bold text-green-800">Lojas Oficiais / MercadoLíderes</span>
+                                <span class="font-bold">50% de Desconto</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 bg-slate-100 rounded">
+                                <span class="text-slate-700">Reputação Verde</span>
+                                <span>40% de Desconto</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 bg-slate-50 rounded">
+                                <span class="text-slate-700">Reputação Amarela/Sem Reputação</span>
+                                <span>0% de Desconto (Paga Cheio)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6 border-t-4 border-red-500">
+                    <h3 class="font-bold text-lg mb-2">Penalidades e Custos Extras</h3>
+                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-700">
+                        <li><strong>Custo Fixo:</strong> R$ 6,00 por item vendido abaixo de R$ 79,00.</li>
+                        <li><strong>Cancelamento por falta de estoque:</strong> Impacta reputação imediatamente.</li>
+                        <li><strong>Atraso no despacho:</strong> Se exceder 15% das vendas, perde o termômetro.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- SEÇÃO: LOGÍSTICA -->
+            <div id="logistics" class="hidden-section space-y-6">
+                <h2 class="text-2xl font-bold text-slate-800">Mercado Envios: Profissionalizando a Operação</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-lg shadow border border-slate-200 text-center">
+                        <div class="text-2xl mb-2">📦</div>
+                        <h4 class="font-bold text-sm">Agência</h4>
+                        <p class="text-xs text-slate-500 mt-1">Você leva até o ponto. Básico.</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow border border-slate-200 text-center">
+                        <div class="text-2xl mb-2">🚚</div>
+                        <h4 class="font-bold text-sm">Coleta</h4>
+                        <p class="text-xs text-slate-500 mt-1">Caminhão passa na sua empresa.</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow border-2 border-meli-blue text-center relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-meli-yellow text-[10px] font-bold px-2 py-0.5">TOP</div>
+                        <div class="text-2xl mb-2">⚡</div>
+                        <h4 class="font-bold text-sm">Full</h4>
+                        <p class="text-xs text-slate-500 mt-1">Estoque no ML. Entrega em 24h.</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow border border-slate-200 text-center">
+                        <div class="text-2xl mb-2">🛵</div>
+                        <h4 class="font-bold text-sm">Flex</h4>
+                        <p class="text-xs text-slate-500 mt-1">Motoboy no mesmo dia. Local.</p>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="font-bold text-lg mb-4">Análise de Impacto Financeiro Logístico</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 text-left">
+                                    <th class="p-3">Fator</th>
+                                    <th class="p-3">Impacto na Margem</th>
+                                    <th class="p-3">Ação Recomendada</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr>
+                                    <td class="p-3 font-medium">Troca/Devolução (Moda)</td>
+                                    <td class="p-3 text-red-600">-5% a -8% (Perda de frete ida e volta)</td>
+                                    <td class="p-3">Ter tabela de medidas PERFEITA nas fotos, não só na descrição.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-medium">Full Fulfillment</td>
+                                    <td class="p-3 text-orange-600">Custos de armazenagem e retirada</td>
+                                    <td class="p-3">Enviar apenas produtos "Curva A" (alto giro). Estoque parado paga taxa extra.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-medium">Atraso no Envio</td>
+                                    <td class="p-3 text-red-600">Perda de exposição (Queda de 50% nas visitas)</td>
+                                    <td class="p-3">Processos internos rigorosos. Despache antes do corte.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO: SEO & RISCOS -->
+            <div id="seo" class="hidden-section space-y-6">
+                <h2 class="text-2xl font-bold text-slate-800">SEO e Segurança da Conta</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Gerador de Títulos -->
+                    <div class="card p-6">
+                        <h3 class="font-bold text-lg mb-4 text-meli-blue">Gerador de Títulos Otimizados</h3>
+                        <p class="text-sm text-slate-600 mb-3">Estrutura: <strong>Produto + Marca + Modelo + Atributo 1 + Atributo 2</strong></p>
+                        
+                        <div class="space-y-3">
+                            <select id="seo-category" class="w-full p-2 border rounded">
+                                <option value="kids">Moda Infantil</option>
+                                <option value="fitness">Moda Fitness</option>
+                            </select>
+                            <input type="text" id="seo-product" placeholder="Ex: Legging, Body, Conjunto" class="w-full p-2 border rounded">
+                            <input type="text" id="seo-feature" placeholder="Ex: Alta Compressão, Algodão Egípcio" class="w-full p-2 border rounded">
+                            <button onclick="generateTitles()" class="w-full bg-slate-800 text-white py-2 rounded font-medium hover:bg-slate-700">Gerar Ideias</button>
+                        </div>
+
+                        <div id="seo-results" class="mt-4 space-y-2 hidden">
+                            <p class="text-xs font-bold text-slate-500 uppercase">Sugestões:</p>
+                            <ul class="text-sm space-y-2 text-slate-700" id="title-list">
+                                <!-- JS Populates Here -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Palavras Proibidas -->
+                    <div class="card p-6 border-l-4 border-red-500">
+                        <h3 class="font-bold text-lg mb-4 text-red-700">Dicionário de Risco (Moda)</h3>
+                        <p class="text-sm text-slate-600 mb-4">Evite suspensões. Nunca use termos de Marcas Registradas ou Promessas Falsas.</p>
+                        
+                        <div class="h-64 overflow-y-auto space-y-3 pr-2">
+                            <div class="p-2 bg-red-50 rounded border border-red-100">
+                                <span class="block font-bold text-red-800">❌ Velcro</span>
+                                <span class="text-xs text-slate-600">Marca registrada. Use: <strong>Fecho de contato</strong>.</span>
+                            </div>
+                            <div class="p-2 bg-red-50 rounded border border-red-100">
+                                <span class="block font-bold text-red-800">❌ Lycra</span>
+                                <span class="text-xs text-slate-600">Marca registrada. Use: <strong>Elastano</strong> ou Spandex.</span>
+                            </div>
+                            <div class="p-2 bg-red-50 rounded border border-red-100">
+                                <span class="block font-bold text-red-800">❌ Tipo Nike/Adidas</span>
+                                <span class="text-xs text-slate-600">Réplica/Comparação. Proibido. Use apenas a sua marca.</span>
+                            </div>
+                            <div class="p-2 bg-red-50 rounded border border-red-100">
+                                <span class="block font-bold text-red-800">❌ Original</span>
+                                <span class="text-xs text-slate-600">Risco de revisão manual. Se você é o fabricante, use "Com Nota Fiscal".</span>
+                            </div>
+                            <div class="p-2 bg-red-50 rounded border border-red-100">
+                                <span class="block font-bold text-red-800">❌ Brinde Grátis</span>
+                                <span class="text-xs text-slate-600">O ML não gosta de itens fora do anúncio principal. Crie "Kit com X".</span>
+                            </div>
+                            <div class="p-2 bg-red-50 rounded border border-red-100">
+                                <span class="block font-bold text-red-800">❌ Garantia Eterna</span>
+                                <span class="text-xs text-slate-600">Promessa irrealista. Use prazos definidos (ex: 3 meses).</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- Navegação ---
+        function showSection(sectionId) {
+            // Esconde todas
+            document.querySelectorAll('.visible-section').forEach(el => {
+                el.classList.remove('visible-section');
+                el.classList.add('hidden-section');
+            });
+            document.querySelectorAll('.hidden-section').forEach(el => {
+                if(el.id === sectionId) {
+                    el.classList.remove('hidden-section');
+                    el.classList.add('visible-section');
+                }
+            });
+
+            // Atualiza botões
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            const btn = document.getElementById('btn-' + sectionId);
+            if(btn) btn.classList.add('active');
+
+            // Se for calculadora, garantir que o gráfico renderize
+            if(sectionId === 'calculator' || sectionId === 'scenarios') {
+                calculatePricing();
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // --- Lógica de Negócios (Calculadora) ---
+        
+        let priceChart = null;
+
+        function calculatePricing() {
+            // 1. Coleta de Dados
+            const cogs = parseFloat(document.getElementById('calc-cogs').value) || 0;
+            const packaging = parseFloat(document.getElementById('calc-packaging').value) || 0;
+            const ops = parseFloat(document.getElementById('calc-ops').value) || 0;
+            
+            const totalCost = cogs + packaging + ops;
+
+            const listingType = document.getElementById('calc-listing-type').value;
+            const taxRate = (parseFloat(document.getElementById('calc-tax').value) || 0) / 100;
+            const adsRate = (parseFloat(document.getElementById('calc-ads').value) || 0) / 100;
+            const marginTarget = (parseFloat(document.getElementById('calc-margin-target').value) || 0) / 100;
+
+            // Comissão Base (Estimativa média moda)
+            let commissionRate = listingType === 'premium' ? 0.18 : 0.13;
+            
+            // Lógica Reversa de Precificação (Complexa)
+            // Preço = CustoTotal + (Preço * Imposto) + (Preço * Comissão) + (Preço * Ads) + Frete + TaxaFixa + (Preço * Margem)
+            // Preço * (1 - Imposto - Comissão - Ads - Margem) = CustoTotal + Frete + TaxaFixa
+            
+            // Fator Divisor
+            let denominator = 1 - taxRate - commissionRate - adsRate - marginTarget;
+            
+            if (denominator <= 0) {
+                alert("Margem impossível! A soma das taxas e margem ultrapassa 100%. Reduza a margem ou custos.");
+                return;
+            }
+
+            // Iteração para achar o preço considerando as faixas de frete e taxa fixa
+            // Começamos com um chute inicial sem frete/fixo
+            let estimatedPrice = totalCost / denominator;
+            let finalPrice = 0;
+            let fixedFee = 0;
+            let shippingCost = 0;
+
+            // Refinamento (Simulação de 2 passos para ajuste de faixas)
+            for(let i=0; i<3; i++) {
+                if (estimatedPrice < 79) {
+                    fixedFee = 6.00;
+                    shippingCost = 0; // Comprador paga (geralmente), ou vendedor paga fixo menor. Vamos assumir 0 aqui para simplicidade do modelo "quem paga frete >79"
+                } else {
+                    fixedFee = 0;
+                    // Frete médio subsidiado (Moda é leve, mas volumoso).
+                    // MercadoLíder paga ~R$ 20,00 em média de co-participação para envios nacionais padrão
+                    shippingCost = 22.00; // Média ponderada conservadora
+                }
+
+                finalPrice = (totalCost + fixedFee + shippingCost) / denominator;
+                estimatedPrice = finalPrice;
+            }
+
+            // Cálculos Finais Absolutos
+            const taxVal = finalPrice * taxRate;
+            const commissionVal = finalPrice * commissionRate;
+            const adsVal = finalPrice * adsRate;
+            const netProfit = finalPrice * marginTarget; // Matemático puro da fórmula reversa
+
+            // Atualização da UI
+            document.getElementById('result-price').innerText = formatCurrency(finalPrice);
+            document.getElementById('result-profit-abs').innerText = formatCurrency(netProfit);
+            
+            const roi = (netProfit / totalCost) * 100;
+            document.getElementById('result-roi').innerText = roi.toFixed(1) + "%";
+
+            // Tabela DRE
+            document.getElementById('dre-revenue').innerText = formatCurrency(finalPrice);
+            document.getElementById('dre-tax').innerText = "- " + formatCurrency(taxVal);
+            document.getElementById('dre-commission').innerText = "- " + formatCurrency(commissionVal);
+            document.getElementById('dre-fixed-fee').innerText = "- " + formatCurrency(fixedFee);
+            document.getElementById('dre-shipping').innerText = "- " + formatCurrency(shippingCost);
+            document.getElementById('dre-ads').innerText = "- " + formatCurrency(adsVal);
+            document.getElementById('dre-cogs').innerText = "- " + formatCurrency(totalCost);
+            document.getElementById('dre-net-profit').innerText = formatCurrency(netProfit);
+
+            updateChart(totalCost, taxVal, commissionVal + fixedFee, shippingCost, adsVal, netProfit);
+        }
+
+        function formatCurrency(val) {
+            return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        // --- Gráficos (Chart.js) ---
+        function updateChart(cost, tax, fees, shipping, ads, profit) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            
+            if (priceChart) {
+                priceChart.destroy();
+            }
+
+            priceChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Custo Produto', 'Impostos', 'Comissão ML', 'Frete', 'Ads/Mkt', 'Lucro Líquido'],
+                    datasets: [{
+                        data: [cost, tax, fees, shipping, ads, profit],
+                        backgroundColor: [
+                            '#94a3b8', // Cost (Cinza)
+                            '#ef4444', // Tax (Vermelho)
+                            '#3b82f6', // Fees (Azul)
+                            '#f59e0b', // Shipping (Laranja)
+                            '#8b5cf6', // Ads (Roxo)
+                            '#22c55e'  // Profit (Verde)
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        // --- Simulador de Cenários ---
+        function loadScenario(type) {
+            // Muda para a aba calculadora
+            showSection('calculator');
+            
+            const inputs = {
+                cogs: document.getElementById('calc-cogs'),
+                listing: document.getElementById('calc-listing-type'),
+                tax: document.getElementById('calc-tax'),
+                ads: document.getElementById('calc-ads'),
+                margin: document.getElementById('calc-margin-target'),
+                packaging: document.getElementById('calc-packaging')
+            };
+
+            let desc = "";
+
+            switch(type) {
+                case 'low': // Meias
+                    inputs.cogs.value = 8.00;
+                    inputs.packaging.value = 0.50;
+                    inputs.listing.value = 'classic'; // Economizar taxa
+                    inputs.ads.value = 5;
+                    inputs.margin.value = 15; // Margem menor em ticket baixo
+                    desc = "Cenário Ticket Baixo: Margem apertada devido à Taxa Fixa de R$ 6,00. Recomendação: Criar Kits de 3 ou 5 pares.";
+                    break;
+                case 'mid': // Body
+                    inputs.cogs.value = 28.00;
+                    inputs.packaging.value = 1.00;
+                    inputs.listing.value = 'premium';
+                    inputs.ads.value = 10;
+                    inputs.margin.value = 25;
+                    desc = "Cenário Ticket Médio: Zona ideal. Preço final ficará próximo da barreira de frete grátis, cuidado.";
+                    break;
+                case 'high': // Fitness Conjunto
+                    inputs.cogs.value = 55.00;
+                    inputs.packaging.value = 2.50;
+                    inputs.listing.value = 'premium';
+                    inputs.ads.value = 12; // Categoria competitiva exige mais ads
+                    inputs.margin.value = 30;
+                    desc = "Cenário Ticket Alto: Absorve bem o Frete Grátis e permite investimento agressivo em Ads.";
+                    break;
+                case 'promo': // Com desconto
+                    inputs.cogs.value = 40.00;
+                    inputs.listing.value = 'premium';
+                    inputs.ads.value = 8;
+                    inputs.margin.value = 15; // Sacrificar margem por volume
+                    desc = "Cenário Promoção: Reduzimos a meta de margem para 15% para ganhar volume e relevância.";
+                    break;
+                 case 'free': // Estratégia Frete
+                    inputs.cogs.value = 30.00;
+                    inputs.listing.value = 'premium';
+                    inputs.ads.value = 8;
+                    inputs.margin.value = 20; 
+                    desc = "Estratégia Frete: Forçando o preço para ficar acima de R$ 79,00 e oferecer frete grátis (conversão maior).";
+                    break;
+            }
+
+            document.getElementById('scenario-description').innerText = desc;
+            calculatePricing();
+            
+            // Scroll suave para os resultados
+            document.querySelector('.lg\\:col-span-8').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- SEO Generator ---
+        function generateTitles() {
+            const cat = document.getElementById('seo-category').value;
+            const product = document.getElementById('seo-product').value || "Produto";
+            const feature = document.getElementById('seo-feature').value || "Característica";
+            
+            const list = document.getElementById('title-list');
+            list.innerHTML = "";
+            document.getElementById('seo-results').classList.remove('hidden');
+
+            let templates = [];
+            
+            if (cat === 'kids') {
+                templates = [
+                    `Kit 3 ${product} Infantil ${feature} Algodão Conforto`,
+                    `${product} Bebê Menina/Menino ${feature} Festa Luxo`,
+                    `${product} Infantil Personagens ${feature} Pronta Entrega`,
+                    `Roupa Infantil ${product} ${feature} Tamanho 1 Ao 8`,
+                    `${product} De Bebê ${feature} Enxoval Saída Maternidade`
+                ];
+            } else {
+                templates = [
+                    `Conjunto ${product} Fitness ${feature} Zero Transparência`,
+                    `${product} Academia Feminina ${feature} Cintura Alta`,
+                    `${product} Treino Crossfit ${feature} Alta Compressão`,
+                    `Kit 2 ${product} Fitness ${feature} Proteção Uv50+`,
+                    `Moda Fitness ${product} ${feature} Levanta Bumbum`
+                ];
+            }
+
+            templates.forEach(t => {
+                const li = document.createElement('li');
+                li.className = "p-2 bg-slate-50 border border-slate-200 rounded text-slate-700 hover:bg-white cursor-pointer";
+                li.innerHTML = `<i class="fa-solid fa-copy text-slate-400 mr-2"></i> ${t}`;
+                li.onclick = function() {
+                    navigator.clipboard.writeText(t);
+                    alert("Copiado!");
+                };
+                list.appendChild(li);
+            });
+        }
+
+        // Inicializar com cálculo padrão
+        window.onload = function() {
+            calculatePricing();
+        };
+
+    </script>
+</body>
+</html>
