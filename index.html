@@ -72,7 +72,6 @@
             background: linear-gradient(135deg, #2D3277 0%, #1e2252 100%);
         }
         
-        /* CORREÇÃO IMPORTANTE: Força ocultação mesmo com ID style */
         #auth-container.hidden {
             display: none !important;
         }
@@ -104,7 +103,7 @@
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
     <!-- ================= TELA DE LOGIN / CADASTRO ================= -->
     <div id="auth-container">
@@ -197,6 +196,9 @@
                         <button onclick="switchTab('sim')" id="btn-tab-sim" class="px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition">
                             <i class="fa-solid fa-chart-line mr-1"></i> Simulador
                         </button>
+                         <button onclick="switchTab('discount')" id="btn-tab-discount" class="px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition">
+                            <i class="fa-solid fa-percent mr-1"></i> Calc. Rápida
+                        </button>
                         <button onclick="switchTab('products')" id="btn-tab-products" class="px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition">
                             <i class="fa-solid fa-box-open mr-1"></i> Meus Produtos
                         </button>
@@ -230,7 +232,6 @@
                 <div id="calculator-content" class="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-gray-50/50 p-2">
                     <!-- Left Column: Inputs -->
                     <div class="lg:col-span-7 space-y-6">
-                        
                         <!-- Section 0: Identificação -->
                         <div class="bg-white p-6 rounded-lg card-shadow border-t-4 border-gray-600">
                             <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-tag mr-2"></i>Identificação do Produto</h2>
@@ -599,6 +600,121 @@
                 </div>
             </div>
 
+            <!-- ================= ABA CALCULAR DESCONTO (NOVA) ================= -->
+            <div id="tab-discount" class="tab-content fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Left Column: Inputs for Quick Check -->
+                    <div class="lg:col-span-5 space-y-6">
+                        <div class="bg-white p-6 rounded-lg card-shadow">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fa-solid fa-calculator text-blue-500 mr-2"></i>Calculadora Rápida</h2>
+                            <p class="text-sm text-gray-500 mb-4">Insira o Preço de Tabela (De) e o Desconto (%) para ver a margem final.</p>
+                            
+                            <!-- Product Params -->
+                            <div class="space-y-4">
+                                <div class="input-group">
+                                    <label class="text-lg text-blue-800 font-bold">Preço de Anúncio (De) R$</label>
+                                    <input type="number" id="quickListPrice" step="0.01" class="w-full text-2xl font-bold text-gray-700 p-2 border-2 border-blue-200 rounded" placeholder="Ex: 100.00" oninput="calculateQuickProfit()">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="text-purple-700 font-bold"><i class="fa-solid fa-percent mr-1"></i> Desconto Promoção (%)</label>
+                                    <input type="number" id="quickPromoPct" step="1.0" value="0" class="w-full text-xl p-2 border-2 border-purple-300 rounded bg-purple-50 font-semibold text-purple-900" oninput="calculateQuickProfit()">
+                                </div>
+
+                                <!-- Display Calculated "Por" -->
+                                <div class="bg-green-50 p-3 rounded border border-green-200 text-center">
+                                    <span class="text-xs text-green-700 uppercase font-bold">Preço Final (Por)</span>
+                                    <div class="text-3xl font-bold text-green-600" id="quickPricePorDisplay">R$ 0,00</div>
+                                </div>
+                                
+                                <hr class="border-gray-200 my-4">
+                                <h3 class="text-sm font-bold text-gray-600">Custos & Configuração</h3>
+                                
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="input-group">
+                                        <label>CMV (R$)</label>
+                                        <input type="number" id="quickCostProd" step="0.01" value="16.40">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Emb/Outros (R$)</label>
+                                        <input type="number" id="quickCostPack" step="0.01" value="1.00"> 
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Imposto (%)</label>
+                                        <input type="number" id="quickTax" step="0.1" value="8.00">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Ads (%)</label>
+                                        <input type="number" id="quickAds" step="0.1" value="7.00">
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label>Categoria / Taxas</label>
+                                    <select id="quickCategory" class="w-full p-2 border rounded text-sm">
+                                        <optgroup label="Moda Infantil e Geral (Taxa Padrão)">
+                                            <option value="padrao">Padrão / Outros (14% / 19%)</option>
+                                        </optgroup>
+                                        <optgroup label="Moda Fitness (Taxa Reduzida!)">
+                                            <option value="fitness_calcas">Calças e Joggings</option>
+                                            <option value="fitness_camisetas">Camisetas</option>
+                                            <option value="fitness_leggings">Leggings</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="input-group">
+                                        <label>Tipo Anúncio</label>
+                                        <select id="quickType" class="w-full p-2 border rounded text-sm">
+                                            <option value="classic">Clássico</option>
+                                            <option value="premium" selected>Premium</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Peso</label>
+                                        <select id="quickWeight" class="w-full p-2 border rounded text-sm">
+                                            <option value="up_300">Até 300g</option>
+                                            <option value="up_500">300-500g</option>
+                                            <option value="up_1kg">500g-1kg</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="calculateQuickProfit()" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded shadow transition transform hover:scale-105">
+                                Recalcular
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Results -->
+                    <div class="lg:col-span-7 space-y-6">
+                         <!-- Result Cards -->
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-6 rounded-lg card-shadow border-l-4 border-green-500 text-center relative overflow-hidden">
+                                <div class="absolute top-0 right-0 p-2 opacity-10"><i class="fa-solid fa-money-bill-wave text-6xl"></i></div>
+                                <h3 class="text-gray-500 text-sm font-semibold uppercase">Lucro Líquido</h3>
+                                <div class="text-4xl font-bold text-green-600 mt-2" id="resQuickProfit">R$ 0,00</div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg card-shadow border-l-4 border-blue-500 text-center relative overflow-hidden">
+                                <div class="absolute top-0 right-0 p-2 opacity-10"><i class="fa-solid fa-chart-pie text-6xl"></i></div>
+                                <h3 class="text-gray-500 text-sm font-semibold uppercase">Margem Líquida</h3>
+                                <div class="text-4xl font-bold text-blue-600 mt-2" id="resQuickMargin">0%</div>
+                            </div>
+                        </div>
+
+                        <!-- DRE Table -->
+                        <div class="bg-white p-6 rounded-lg card-shadow">
+                            <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">DRE da Simulação</h3>
+                            <table class="w-full text-sm">
+                                <tbody class="divide-y divide-gray-100" id="quickDRETable">
+                                    <tr><td class="py-4 text-center text-gray-400">Preencha os dados e calcule.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- ================= ABA PRODUTOS SALVOS ================= -->
             <div id="tab-products" class="tab-content fade-in">
                 <!-- (Conteúdo Mantido) -->
@@ -808,7 +924,7 @@
         };
 
         function getOfficialShippingCost(price, weightClass) {
-            if (weightClass === 'custom') return parseFloat(document.getElementById('shippingCostUser').value) || 0;
+            if (weightClass === 'custom') return 0; 
             if (price < 79) return 0; 
             
             let table = null;
@@ -1213,6 +1329,89 @@
             document.getElementById('simDRETable').innerHTML = dreHtml;
         };
 
+        // --- NEW: Calculate Quick Profit Logic (Calc. Rápida) ---
+        window.calculateQuickProfit = function() {
+            const listPrice = parseFloat(document.getElementById('quickListPrice').value) || 0;
+            const promoPct = parseFloat(document.getElementById('quickPromoPct').value) || 0;
+
+            if (listPrice <= 0) {
+                // Se não tiver preço de tabela, zera tudo
+                document.getElementById('resQuickProfit').innerText = "R$ 0,00";
+                document.getElementById('resQuickMargin').innerText = "0%";
+                document.getElementById('quickPricePorDisplay').innerText = "R$ 0,00";
+                return;
+            }
+
+            // Calculate Selling Price (Por)
+            const price = listPrice * (1 - (promoPct / 100));
+            
+            // Update Visual Display of Price Por
+            const fmt = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('quickPricePorDisplay').innerText = fmt(price);
+
+            // Costs
+            const cmv = parseFloat(document.getElementById('quickCostProd').value) || 0;
+            const pack = parseFloat(document.getElementById('quickCostPack').value) || 0;
+            const taxPct = (parseFloat(document.getElementById('quickTax').value) || 0) / 100;
+            const adsPct = (parseFloat(document.getElementById('quickAds').value) || 0) / 100;
+            
+            // Fee Logic
+            const cat = document.getElementById('quickCategory').value;
+            const type = document.getElementById('quickType').value;
+            let feePct = 0.19; 
+            if (cat.startsWith('fitness') && type === 'classic') feePct = 0.125;
+            else if (cat.startsWith('fitness') && type === 'premium') feePct = 0.175;
+            else if (type === 'classic') feePct = 0.14;
+            else feePct = 0.19;
+
+            const weightClass = document.getElementById('quickWeight').value;
+            
+            // ML Logic (Frete & Fixed) based on Selling Price (Por)
+            let shipping = 0;
+            let fixedFee = 0;
+
+            if (price < 79) {
+                shipping = 0;
+                if (price < 12.50) fixedFee = price * 0.5;
+                else if (price < 29) fixedFee = 6.25;
+                else if (price < 50) fixedFee = 6.50;
+                else fixedFee = 6.75;
+            } else {
+                shipping = getOfficialShippingCost(price, weightClass);
+                fixedFee = 0;
+            }
+            
+            // Calc
+            const valComm = price * feePct;
+            const valTax = price * taxPct;
+            const valAds = price * adsPct;
+            const totalCosts = cmv + pack;
+
+            const profit = price - totalCosts - shipping - fixedFee - valComm - valTax - valAds;
+            const margin = (profit / price) * 100;
+
+            // Results UI
+            document.getElementById('resQuickProfit').innerText = fmt(profit);
+            document.getElementById('resQuickProfit').className = profit >= 0 ? "text-4xl font-bold text-green-600 mt-2" : "text-4xl font-bold text-red-600 mt-2";
+            
+            document.getElementById('resQuickMargin').innerText = margin.toFixed(2) + "%";
+            document.getElementById('resQuickMargin').className = margin >= 0 ? "text-4xl font-bold text-blue-600 mt-2" : "text-4xl font-bold text-red-600 mt-2";
+
+            // DRE
+            let html = `
+                <tr class="font-bold text-base bg-gray-50"><td class="py-2">Preço de Venda (Por)</td><td class="py-2 text-right text-green-700">${fmt(price)}</td></tr>
+                <tr class="text-xs text-gray-500"><td class="py-1">Preço Tabela (De)</td><td class="py-1 text-right">${fmt(listPrice)}</td></tr>
+                <tr class="text-red-500"><td class="py-2 pl-2 border-l-2 border-red-200">(-) Comissão ML (${(feePct*100).toFixed(1)}%)</td><td class="py-2 text-right">- ${fmt(valComm)}</td></tr>
+                <tr class="text-red-600 bg-red-50"><td class="py-2 pl-2 border-l-2 border-red-300">(-) Taxa Fixa</td><td class="py-2 text-right">- ${fmt(fixedFee)}</td></tr>
+                <tr class="text-red-500"><td class="py-2 pl-2 border-l-2 border-red-200">(-) Frete</td><td class="py-2 text-right">- ${fmt(shipping)}</td></tr>
+                <tr class="text-orange-500"><td class="py-2 pl-2 border-l-2 border-orange-200">(-) Impostos</td><td class="py-2 text-right">- ${fmt(valTax)}</td></tr>
+                <tr class="text-orange-500"><td class="py-2 pl-2 border-l-2 border-orange-200">(-) Ads</td><td class="py-2 text-right">- ${fmt(valAds)}</td></tr>
+                <tr class="text-gray-500"><td class="py-2 pl-2 border-l-2 border-gray-200">(-) CMV + Emb.</td><td class="py-2 text-right">- ${fmt(totalCosts)}</td></tr>
+                <tr class="${profit >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} font-bold text-base"><td class="py-3 pl-2 rounded-l">(=) Lucro Líquido</td><td class="py-3 text-right rounded-r">${fmt(profit)}</td></tr>
+            `;
+            document.getElementById('quickDRETable').innerHTML = html;
+        };
+
         // --- GLOBAL INITIALIZATION ---
         window.formatProductName = function(input) {
             let value = input.value;
@@ -1236,6 +1435,7 @@
             document.getElementById('btn-tab-calc').className = baseClass;
             document.getElementById('btn-tab-products').className = baseClass;
             document.getElementById('btn-tab-sim').className = baseClass;
+            document.getElementById('btn-tab-discount').className = baseClass; // Reset new button
 
             if(tabName === 'calc') {
                 document.getElementById('tab-calc').classList.add('active');
@@ -1243,6 +1443,9 @@
             } else if (tabName === 'sim') {
                 document.getElementById('tab-sim').classList.add('active');
                 document.getElementById('btn-tab-sim').className = activeClass;
+            } else if (tabName === 'discount') { // New case
+                document.getElementById('tab-discount').classList.add('active');
+                document.getElementById('btn-tab-discount').className = activeClass;
             } else {
                 document.getElementById('tab-products').classList.add('active');
                 document.getElementById('btn-tab-products').className = activeClass;
