@@ -71,6 +71,12 @@
             justify-content: center;
             background: linear-gradient(135deg, #2D3277 0%, #1e2252 100%);
         }
+        
+        /* CORREÇÃO IMPORTANTE: Força ocultação mesmo com ID style */
+        #auth-container.hidden {
+            display: none !important;
+        }
+        
         .auth-box {
             background: white;
             padding: 2rem;
@@ -650,8 +656,6 @@
         import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // 1. Firebase Init
-        // Use a chave direta se a variável global não estiver definida, ou use __firebase_config do ambiente.
-        // Abaixo estou usando sua chave direta para garantir funcionamento.
         const firebaseConfig = {
             apiKey: "AIzaSyCg4BMiV6kHpuEmx-NMxnrDHgH6C-FfA8Y",
             authDomain: "velt-pricing.firebaseapp.com",
