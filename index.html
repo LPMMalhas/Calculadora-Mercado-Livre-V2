@@ -43,6 +43,26 @@
         .strategy-opportunity { @apply border-green-500 bg-green-50; }
         .strategy-info { @apply border-blue-500 bg-blue-50; }
 
+        /* Dropdown de Pesquisa */
+        .search-results {
+            position: absolute;
+            background: white;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            z-index: 50;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        .search-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .search-item:hover { background-color: #eff6ff; }
+
         /* --- ESTILOS DE IMPRESSÃO (A4) --- */
         @media print {
             @page { size: A4 portrait; margin: 1cm; }
@@ -55,6 +75,8 @@
             .card-shadow { box-shadow: none !important; border: 1px solid #ddd; page-break-inside: avoid; }
             input, select { background-color: transparent !important; border: none !important; border-bottom: 1px solid #ccc !important; padding-left: 0 !important; }
             .fa-tags.text-9xl { display: none; } 
+            .tab-content { display: none !important; }
+            .tab-content.active { display: block !important; }
         }
     </style>
 </head>
@@ -71,9 +93,12 @@
                 </div>
             </div>
             <!-- Navegação de Abas -->
-            <nav class="flex gap-4 bg-blue-900/50 rounded-lg p-1">
+            <nav class="flex gap-2 bg-blue-900/50 rounded-lg p-1">
                 <button onclick="switchTab('calc')" id="btn-tab-calc" class="px-4 py-1 text-sm font-semibold rounded text-white bg-blue-600 transition">
                     <i class="fa-solid fa-calculator mr-1"></i> Calculadora
+                </button>
+                <button onclick="switchTab('sim')" id="btn-tab-sim" class="px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition">
+                    <i class="fa-solid fa-chart-line mr-1"></i> Simulador de Lucro
                 </button>
                 <button onclick="switchTab('products')" id="btn-tab-products" class="px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition">
                     <i class="fa-solid fa-box-open mr-1"></i> Meus Produtos
@@ -92,11 +117,9 @@
                 <button onclick="saveProduct()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 transition text-sm">
                     <i class="fa-solid fa-save"></i> Salvar Produto
                 </button>
-                <!-- Botão 1: PDF Direto (Garante o Nome) -->
                 <button onclick="exportPdf()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 transition text-sm">
                     <i class="fa-solid fa-file-pdf"></i> Salvar PDF (A4)
                 </button>
-                <!-- Botão 2: Impressão Nativa (Opcional) -->
                 <button onclick="printContent()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 transition text-sm">
                     <i class="fa-solid fa-print"></i> Imprimir
                 </button>
@@ -104,14 +127,13 @@
 
             <!-- Conteúdo da Calculadora (ID para PDF) -->
             <div id="calculator-content" class="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-gray-50/50 p-2">
-                
                 <!-- Left Column: Inputs -->
                 <div class="lg:col-span-7 space-y-6">
                     
                     <!-- Section 0: Identificação -->
                     <div class="bg-white p-6 rounded-lg card-shadow border-t-4 border-gray-600">
                         <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-tag mr-2"></i>Identificação do Produto</h2>
-                        <input type="hidden" id="productId"> <!-- Hidden ID for updates -->
+                        <input type="hidden" id="productId"> 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="input-group">
                                 <label>Nome do Produto (Auto-Formatado)</label>
@@ -153,7 +175,6 @@
                     <div class="bg-white p-6 rounded-lg card-shadow border-t-4 border-yellow-400">
                         <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-store mr-2"></i>Parâmetros Mercado Livre</h2>
                         
-                        <!-- Seletor de Categoria Completo -->
                         <div class="bg-yellow-50 p-3 rounded border border-yellow-200 mb-4">
                             <div class="input-group">
                                 <label class="text-yellow-800"><i class="fa-solid fa-tags mr-1"></i> Categoria do Produto</label>
@@ -193,7 +214,6 @@
                                 <input type="number" id="feePercent" step="0.1" value="19.00" oninput="calculate()" class="bg-gray-50 font-bold text-gray-700">
                             </div>
                             
-                            <!-- Frete Logic Wrapper -->
                             <div class="col-span-1 md:col-span-2 bg-gray-50 p-3 rounded border border-gray-200">
                                 <div class="flex justify-between items-center mb-2">
                                     <h3 class="text-sm font-bold text-gray-600">Logística (Mercado Envios)</h3>
@@ -217,7 +237,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Exibição Dinâmica da Regra Ativa -->
                                 <div class="mt-2 text-xs p-2 border rounded transition-colors" id="freteRuleBox">
                                     <p class="font-bold mb-1"><i class="fa-solid fa-robot mr-1"></i> Regra Ativa para este Preço:</p>
                                     <p id="freteRuleText">...</p>
@@ -400,8 +419,88 @@
             </div>
         </div>
 
+        <!-- ================= ABA SIMULADOR ================= -->
+        <div id="tab-sim" class="tab-content fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Painel de Controle -->
+                <div class="lg:col-span-4 bg-white p-6 rounded-lg card-shadow">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fa-solid fa-flask text-blue-500 mr-2"></i>Simular Venda</h2>
+                    
+                    <!-- Search Product in Simulator -->
+                    <div class="mb-6 relative">
+                        <label class="block text-sm font-semibold text-gray-600 mb-1">Buscar Produto Salvo</label>
+                        <div class="relative">
+                            <input type="text" id="simSearchInput" 
+                                   placeholder="Nome ou SKU..." 
+                                   oninput="searchSimProducts()"
+                                   class="w-full pl-3 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+                                <i class="fa-solid fa-search"></i>
+                            </div>
+                        </div>
+                        <div id="simSearchResults" class="search-results"></div>
+                        <div id="simLoadedProduct" class="hidden mt-2 text-xs text-green-600 font-bold bg-green-50 p-2 rounded border border-green-200">
+                            <i class="fa-solid fa-check mr-1"></i> Carregado: <span id="simLoadedName">...</span>
+                        </div>
+                    </div>
+
+                    <!-- Inputs de Preço -->
+                    <div class="space-y-4 mb-6 border-t pt-4 border-gray-100">
+                        <!-- LIST PRICE (PREÇO DE) -->
+                        <div class="input-group">
+                            <label class="text-sm text-gray-500 font-semibold">Anunciar por (Preço De):</label>
+                            <input type="number" id="simListPriceInput" step="0.01" class="w-full text-lg font-semibold text-gray-500 p-2 border border-gray-300 rounded bg-gray-50" placeholder="0,00" oninput="calculateSimulation()">
+                        </div>
+
+                        <!-- SELLING PRICE (PREÇO POR) -->
+                        <div class="input-group">
+                            <label class="text-lg text-blue-800 font-bold">Preço de Venda (Por)</label>
+                            <input type="number" id="simPriceInput" step="0.01" class="w-full text-3xl font-bold text-blue-600 p-3 border-2 border-blue-200 rounded-lg shadow-inner" placeholder="0,00" oninput="calculateSimulation()">
+                        </div>
+
+                        <!-- DISPLAY DISCOUNT -->
+                        <div class="flex justify-between items-center bg-purple-50 p-3 rounded border border-purple-100">
+                            <span class="text-purple-800 font-semibold text-sm">Desconto Aplicado:</span>
+                            <span id="simDiscountDisplay" class="font-bold text-xl text-purple-600">0%</span>
+                        </div>
+                    </div>
+
+                    <button onclick="calculateSimulation()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded shadow transition transform hover:scale-105">
+                        Calcular Lucro
+                    </button>
+                </div>
+
+                <!-- Painel de Resultado -->
+                <div class="lg:col-span-8 space-y-6">
+                    <!-- Cards de Resultado -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white p-6 rounded-lg card-shadow text-center">
+                            <h3 class="text-gray-500 text-sm font-semibold uppercase">Lucro Líquido (R$)</h3>
+                            <div class="text-4xl font-bold text-gray-800 mt-2" id="simProfitVal">R$ 0,00</div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg card-shadow text-center">
+                            <h3 class="text-gray-500 text-sm font-semibold uppercase">Margem Líquida (%)</h3>
+                            <div class="text-4xl font-bold text-gray-800 mt-2" id="simMarginVal">0.00%</div>
+                        </div>
+                    </div>
+
+                    <!-- DRE Detalhado -->
+                    <div class="bg-white p-6 rounded-lg card-shadow">
+                        <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">DRE da Simulação (Unitário)</h3>
+                        <table class="w-full text-sm">
+                            <tbody class="divide-y divide-gray-100" id="simDRETable">
+                                <!-- Preenchido via JS -->
+                                <tr><td class="py-4 text-center text-gray-400">Insira um valor e clique em Calcular.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ================= ABA PRODUTOS SALVOS ================= -->
         <div id="tab-products" class="tab-content fade-in">
+            <!-- (Conteúdo Mantido) -->
             <div class="bg-white p-6 rounded-lg card-shadow">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                     <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-list mr-2"></i>Meus Produtos Salvos</h2>
@@ -504,18 +603,195 @@
         function switchTab(tabName) {
             // Esconder todas as abas
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            // Resetar botões
-            document.getElementById('btn-tab-calc').className = "px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition";
-            document.getElementById('btn-tab-products').className = "px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition";
+            
+            // Resetar botões (classes base)
+            const baseClass = "px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition";
+            const activeClass = "px-4 py-1 text-sm font-semibold rounded text-white bg-blue-600 transition";
+            
+            document.getElementById('btn-tab-calc').className = baseClass;
+            document.getElementById('btn-tab-products').className = baseClass;
+            document.getElementById('btn-tab-sim').className = baseClass;
 
             if(tabName === 'calc') {
                 document.getElementById('tab-calc').classList.add('active');
-                document.getElementById('btn-tab-calc').className = "px-4 py-1 text-sm font-semibold rounded text-white bg-blue-600 transition";
+                document.getElementById('btn-tab-calc').className = activeClass;
+            } else if (tabName === 'sim') {
+                document.getElementById('tab-sim').classList.add('active');
+                document.getElementById('btn-tab-sim').className = activeClass;
             } else {
                 document.getElementById('tab-products').classList.add('active');
-                document.getElementById('btn-tab-products').className = "px-4 py-1 text-sm font-semibold rounded text-white bg-blue-600 transition";
-                renderProducts(); // Atualiza lista
+                document.getElementById('btn-tab-products').className = activeClass;
+                renderProducts(); 
             }
+        }
+
+        // --- BUSCA NO SIMULADOR ---
+        function searchSimProducts() {
+            const term = document.getElementById('simSearchInput').value.toUpperCase();
+            const resultsBox = document.getElementById('simSearchResults');
+            
+            if (term.length < 1) {
+                resultsBox.style.display = 'none';
+                return;
+            }
+
+            const filtered = products.filter(p => 
+                p.name.toUpperCase().includes(term) || 
+                p.sku.toUpperCase().includes(term)
+            );
+
+            if (filtered.length > 0) {
+                let html = '';
+                filtered.forEach(p => {
+                    html += `<div class="search-item" onclick="selectSimProduct('${p.id}')">
+                                <div class="font-bold text-gray-800">${p.name}</div>
+                                <div class="text-xs text-gray-500">SKU: ${p.sku} | Preço Por: ${p.results.pricePor}</div>
+                             </div>`;
+                });
+                resultsBox.innerHTML = html;
+                resultsBox.style.display = 'block';
+            } else {
+                resultsBox.innerHTML = '<div class="p-3 text-gray-500 text-sm">Nenhum produto encontrado.</div>';
+                resultsBox.style.display = 'block';
+            }
+        }
+
+        function selectSimProduct(id) {
+            const p = products.find(prod => prod.id === id);
+            if (!p) return;
+
+            // Carrega dados na memória da Calculadora Principal (para a simulação usar)
+            document.getElementById('costProduction').value = p.costs.production;
+            document.getElementById('costPackaging').value = p.costs.packaging;
+            document.getElementById('costOverhead').value = p.costs.overhead;
+            document.getElementById('costMisc').value = p.costs.misc;
+            
+            document.getElementById('feePercent').value = p.config.fee;
+            document.getElementById('taxRate').value = p.config.tax;
+            document.getElementById('adsAcos').value = p.config.ads;
+            document.getElementById('returnRate').value = p.config.returnRate;
+            document.getElementById('returnUnitCost').value = p.config.returnCost;
+            document.getElementById('weightClass').value = p.config.weight;
+
+            // Configura UI do Simulador
+            document.getElementById('simSearchResults').style.display = 'none';
+            document.getElementById('simSearchInput').value = "";
+            document.getElementById('simLoadedProduct').classList.remove('hidden');
+            document.getElementById('simLoadedName').innerText = p.name;
+
+            // Define Preços Iniciais
+            // Extrai valor numérico da string formatada "R$ 49,90" -> 49.90
+            let sellingPrice = parseFloat(p.results.pricePor.replace('R$', '').replace('.', '').replace(',', '.'));
+            let promoRate = parseFloat(p.config.promo) / 100;
+            
+            // Calcula o "Preço De" original baseado na promoção salva
+            let listPrice = sellingPrice;
+            if (promoRate < 1) {
+                listPrice = sellingPrice / (1 - promoRate);
+            }
+
+            document.getElementById('simListPriceInput').value = listPrice.toFixed(2);
+            document.getElementById('simPriceInput').value = sellingPrice.toFixed(2);
+
+            // Roda simulação inicial
+            calculateSimulation();
+        }
+
+        // --- SIMULADOR DE LUCRO ---
+        function calculateSimulation() {
+            const simPrice = parseFloat(document.getElementById('simPriceInput').value);
+            const simListPrice = parseFloat(document.getElementById('simListPriceInput').value) || 0;
+
+            if (!simPrice || simPrice <= 0) {
+                // Limpa se vazio
+                return;
+            }
+
+            // 1. Coleta dados globais da aba Calculadora
+            const v_prod = parseFloat(document.getElementById('costProduction').value) || 0;
+            const v_pack = parseFloat(document.getElementById('costPackaging').value) || 0;
+            const v_over = parseFloat(document.getElementById('costOverhead').value) || 0;
+            const v_misc = parseFloat(document.getElementById('costMisc').value) || 0;
+            
+            const fee_pct = (parseFloat(document.getElementById('feePercent').value) || 0) / 100;
+            const tax_pct = (parseFloat(document.getElementById('taxRate').value) || 0) / 100;
+            const ads_pct = (parseFloat(document.getElementById('adsAcos').value) || 0) / 100;
+            
+            const ret_rate = (parseFloat(document.getElementById('returnRate').value) || 0) / 100;
+            const ret_cost = parseFloat(document.getElementById('returnUnitCost').value) || 0;
+            const weightClass = document.getElementById('weightClass').value;
+
+            // 2. Cálculos de Custos Fixos
+            const V = v_prod + v_pack + v_over + v_misc;
+            const R = ret_rate * ret_cost;
+
+            // 3. Lógica de Frete e Taxa Fixa (Baseada no Preço Simulado)
+            let simShipping = 0;
+            let simFixedFee = 0;
+
+            if (simPrice < 79) {
+                // Frete Grátis (Vendedor não paga)
+                simShipping = 0;
+                // Taxa Fixa
+                if (simPrice < 12.50) simFixedFee = simPrice * 0.5;
+                else if (simPrice < 29) simFixedFee = 6.25;
+                else if (simPrice < 50) simFixedFee = 6.50;
+                else simFixedFee = 6.75;
+            } else {
+                // Vendedor Paga Frete
+                simShipping = getOfficialShippingCost(simPrice, weightClass);
+                simFixedFee = 0;
+            }
+
+            // 4. Cálculos Percentuais
+            const simCommission = simPrice * fee_pct;
+            const simTax = simPrice * tax_pct;
+            const simAds = simPrice * ads_pct;
+
+            // 5. Resultado Final
+            const totalCosts = V + R + simCommission + simFixedFee + simShipping + simTax + simAds;
+            const simProfit = simPrice - totalCosts;
+            const simMargin = (simProfit / simPrice) * 100;
+
+            // 6. Cálculo de Desconto Dinâmico
+            let discountPct = 0;
+            if (simListPrice > 0) {
+                discountPct = ((simListPrice - simPrice) / simListPrice) * 100;
+            }
+
+            // 7. Atualizar UI do Simulador
+            const fmt = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            document.getElementById('simProfitVal').innerText = fmt(simProfit);
+            document.getElementById('simProfitVal').className = simProfit >= 0 ? "text-4xl font-bold text-green-600 mt-2" : "text-4xl font-bold text-red-600 mt-2";
+            
+            document.getElementById('simMarginVal').innerText = simMargin.toFixed(2) + "%";
+            document.getElementById('simMarginVal').className = simMargin >= 0 ? "text-4xl font-bold text-blue-600 mt-2" : "text-4xl font-bold text-red-600 mt-2";
+
+            // Atualiza Display de Desconto
+            const discEl = document.getElementById('simDiscountDisplay');
+            discEl.innerText = discountPct.toFixed(1) + "%";
+            if(discountPct > 0) discEl.className = "font-bold text-xl text-purple-600";
+            else discEl.className = "font-bold text-xl text-gray-400";
+
+            // Tabela DRE Simulação
+            let dreHtml = `
+                <tr class="font-bold text-base bg-gray-50">
+                    <td class="py-2 text-gray-800">(=) Preço Venda Simulado</td>
+                    <td class="py-2 text-right text-blue-700">${fmt(simPrice)}</td>
+                </tr>
+                <tr class="text-red-500"><td class="py-2 pl-2 border-l-2 border-red-200">(-) Comissão ML</td><td class="py-2 text-right">- ${fmt(simCommission)}</td></tr>
+                <tr class="text-red-600 bg-red-50"><td class="py-2 pl-2 border-l-2 border-red-300">(-) Taxa Fixa</td><td class="py-2 text-right">- ${fmt(simFixedFee)}</td></tr>
+                <tr class="text-red-500"><td class="py-2 pl-2 border-l-2 border-red-200">(-) Frete</td><td class="py-2 text-right">- ${fmt(simShipping)}</td></tr>
+                <tr class="text-orange-500"><td class="py-2 pl-2 border-l-2 border-orange-200">(-) Impostos</td><td class="py-2 text-right">- ${fmt(simTax)}</td></tr>
+                <tr class="text-orange-500"><td class="py-2 pl-2 border-l-2 border-orange-200">(-) Ads</td><td class="py-2 text-right">- ${fmt(simAds)}</td></tr>
+                <tr class="text-gray-500"><td class="py-2 pl-2 border-l-2 border-gray-200">(-) Custos Prod. + Devol.</td><td class="py-2 text-right">- ${fmt(V + R)}</td></tr>
+                <tr class="${simProfit >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} font-bold text-base">
+                    <td class="py-3 pl-2 rounded-l">(=) Lucro Líquido</td>
+                    <td class="py-3 text-right rounded-r">${fmt(simProfit)}</td>
+                </tr>
+            `;
+            document.getElementById('simDRETable').innerHTML = dreHtml;
         }
 
         // --- SALVAR PRODUTO ---
