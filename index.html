@@ -284,7 +284,7 @@
                                 </div>
                             </div>
                             <div class="text-xs text-blue-200 mt-2">
-                                 Base para cálculo de Taxas, Impostos e Lucro.
+                                 Base para cálculo de Taxas, Impostos e Lucro. Arredondado para .90/.99.
                             </div>
                         </div>
 
@@ -728,17 +728,15 @@
                 `;
             }
 
-            // 3. PREÇO PSICOLÓGICO
+            // 3. PREÇO PSICOLÓGICO (Já aplicado automaticamente, mas reforçamos)
             let decimal = price - Math.floor(price);
-            if (decimal < 0.90 && price > 10) {
-                 html += `
-                    <div class="strategy-card border-l-4 border-purple-500 bg-purple-50 mb-3 p-4 rounded shadow-sm text-sm">
-                        <h4 class="font-bold text-purple-700"><i class="fa-solid fa-brain"></i> Preço Psicológico</h4>
-                        <p class="text-gray-700 mt-1">Seu preço é R$ ${price.toFixed(2)}. Considere ajustar para <strong>R$ ${Math.floor(price)}.90</strong> ou <strong>R$ ${Math.floor(price)}.99</strong>.</p>
-                        <p class="text-xs text-gray-600">Finais .90 convertem melhor e passam a sensação de "oferta".</p>
-                    </div>
-                `;
-            }
+            html += `
+                <div class="strategy-card border-l-4 border-purple-500 bg-purple-50 mb-3 p-4 rounded shadow-sm text-sm">
+                    <h4 class="font-bold text-purple-700"><i class="fa-solid fa-brain"></i> Preço Psicológico Ativo</h4>
+                    <p class="text-gray-700 mt-1">O sistema arredondou automaticamente seu preço para <strong>R$ ${price.toFixed(2)}</strong>.</p>
+                    <p class="text-xs text-gray-600">Finais .90 ou .99 aumentam a conversão.</p>
+                </div>
+            `;
 
             // 4. OFERTA DE/POR
             html += `
@@ -816,6 +814,18 @@
 
                 let P_sell_candidate = (V + R + estimatedShipping + currentFixed) / currentDenominator;
 
+                // --- LÓGICA DE ARREDONDAMENTO AUTOMÁTICO (.90 / .99) ---
+                // Arredonda para cima para preservar margem
+                let intPart = Math.floor(P_sell_candidate);
+                let decPart = P_sell_candidate - intPart;
+                
+                if (decPart <= 0.90001) {
+                    P_sell_candidate = intPart + 0.90;
+                } else {
+                    P_sell_candidate = intPart + 0.99;
+                }
+
+                // Verifica se o preço candidato JÁ ARREDONDADO cai na faixa
                 if (P_sell_candidate >= band.min && P_sell_candidate <= band.max) {
                     finalSellingPrice = P_sell_candidate;
                     finalShipping = estimatedShipping;
@@ -837,7 +847,14 @@
                 // Fallback para valor alto
                 if (denominator > 0) {
                      let estimatedShipping = getOfficialShippingCost(200, weightClass); 
-                     finalSellingPrice = (V + R + estimatedShipping + 0) / denominator;
+                     let rawPrice = (V + R + estimatedShipping + 0) / denominator;
+                     
+                     // Aplica arredondamento no fallback também
+                     let intPart = Math.floor(rawPrice);
+                     let decPart = rawPrice - intPart;
+                     if (decPart <= 0.90001) finalSellingPrice = intPart + 0.90;
+                     else finalSellingPrice = intPart + 0.99;
+
                      finalShipping = estimatedShipping;
                      finalFixedFee = 0;
                      activeRuleText = "Fallback (Preço Alto)";
