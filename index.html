@@ -483,13 +483,18 @@
 
             // 2. Ajustar Título da Página (Define o nome do arquivo PDF)
             const oldTitle = document.title;
-            const rawName = document.getElementById('productName').value;
-            if (rawName && rawName.trim() !== "") {
-                const safeName = rawName.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                                      .replace(/[^a-zA-Z0-9_\-\s]/g, "_")
-                                      .trim();
-                document.title = safeName;
+            const nameInput = document.getElementById('productName');
+            let fileName = "Calculo_Precificacao"; // Default
+
+            if (nameInput && nameInput.value.trim() !== "") {
+                // Sanitiza o nome para ser seguro como arquivo
+                fileName = nameInput.value.trim()
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
+                    .replace(/[^a-zA-Z0-9_\-\s]/g, "") // Remove caracteres especiais, mantendo espaços
+                    .replace(/\s+/g, "_"); // Troca espaços por _
             }
+
+            document.title = fileName;
 
             // 3. Imprimir
             window.print();
