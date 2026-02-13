@@ -6,8 +6,6 @@
     <title>Calculadora Profissional Mercado Livre 2026</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- html2pdf.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- FontAwesome -->
@@ -36,6 +34,12 @@
         .tab-btn.active { @apply text-blue-800 border-blue-800; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        
+        /* Strategy Card Styles */
+        .strategy-card { @apply bg-white p-4 rounded border-l-4 mb-3 text-sm shadow-sm; }
+        .strategy-warning { @apply border-red-500 bg-red-50; }
+        .strategy-opportunity { @apply border-green-500 bg-green-50; }
+        .strategy-info { @apply border-blue-500 bg-blue-50; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -47,7 +51,7 @@
                 <i class="fa-solid fa-hand-holding-dollar text-2xl text-yellow-400"></i>
                 <div>
                     <h1 class="text-xl font-bold">Precificação ML Pro 2026</h1>
-                    <p class="text-xs text-gray-300">Gestão de Custos & Margem Líquida</p>
+                    <p class="text-xs text-gray-300">Gestão Estratégica de Preço & Margem</p>
                 </div>
             </div>
             <!-- Navegação de Abas -->
@@ -363,10 +367,12 @@
                         </table>
                     </div>
 
-                    <!-- Chart -->
+                    <!-- ESTRATÉGIAS DE PREÇO (SUBSTITUI O GRÁFICO) -->
                     <div class="bg-white p-6 rounded-lg card-shadow">
-                        <h3 class="font-bold text-gray-700 mb-4 text-center">Para onde vai o dinheiro? (Base: Preço Por)</h3>
-                        <canvas id="costChart"></canvas>
+                        <h3 class="font-bold text-gray-700 mb-4 text-center"><i class="fa-solid fa-lightbulb text-yellow-500"></i> Estratégias & Oportunidades</h3>
+                        <div id="strategyContent" class="space-y-3">
+                            <!-- JS preencherá aqui -->
+                        </div>
                     </div>
 
                 </div>
@@ -623,26 +629,6 @@
             input.value = formatted;
         }
 
-        // Inicialização do Gráfico
-        let costChartCtx = document.getElementById('costChart').getContext('2d');
-        let costChart = new Chart(costChartCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Produto/Op.', 'Taxas ML/Frete', 'Mkt/Imp.', 'Lucro'],
-                datasets: [{
-                    data: [30, 30, 20, 20],
-                    backgroundColor: ['#9CA3AF', '#FFE600', '#A855F7', '#22C55E'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'bottom' }
-                }
-            }
-        });
-
         // --- DADOS DE CATEGORIAS ---
         const categoryRates = {
             'padrao': { classic: 14.0, premium: 19.0, name: 'Outros / Padrão' },
@@ -703,6 +689,67 @@
                 return table[weightClass];
             }
             return 0; 
+        }
+
+        // --- GERAÇÃO DE ESTRATÉGIAS ---
+        function updateStrategyPanel(price, margin, weightClass) {
+            const panel = document.getElementById('strategyContent');
+            let html = '';
+
+            // 1. ZONA DE PERIGO (R$ 79 - R$ 90)
+            if (price >= 79 && price <= 90) {
+                html += `
+                    <div class="strategy-card strategy-warning">
+                        <h4 class="font-bold text-red-700"><i class="fa-solid fa-triangle-exclamation"></i> Zona de Perigo do Frete!</h4>
+                        <p class="text-gray-700 mt-1">Seu preço está pouco acima de R$ 79. Nessa faixa, você paga o frete (aprox. R$ 12-20).</p>
+                        <p class="mt-2 text-red-800 font-semibold">Sugestão: Tente reduzir para R$ 78,99.</p>
+                        <p class="text-xs text-gray-600">Abaixo de R$ 79, o ML paga o frete (para produtos novos) e você só paga a Taxa Fixa (~R$ 6,75), o que pode aumentar seu lucro líquido real.</p>
+                    </div>
+                `;
+            } else if (price > 70 && price < 79) {
+                html += `
+                    <div class="strategy-card strategy-opportunity">
+                        <h4 class="font-bold text-green-700"><i class="fa-solid fa-check-circle"></i> Sweet Spot (Ponto Doce)</h4>
+                        <p class="text-gray-700 mt-1">Excelente! Você está na faixa onde o ML subsidia o frete (acima de R$ 19, abaixo de R$ 79).</p>
+                        <p class="text-xs text-gray-600 mt-1">Dica: Se sua margem permitir, você pode subir até R$ 78,90 para maximizar o lucro sem estourar a barreira do frete pago pelo vendedor.</p>
+                    </div>
+                `;
+            }
+
+            // 2. KITS E TICKET BAIXO
+            if (price < 30) {
+                html += `
+                    <div class="strategy-card strategy-info">
+                        <h4 class="font-bold text-blue-700"><i class="fa-solid fa-layer-group"></i> Estratégia de Kits</h4>
+                        <p class="text-gray-700 mt-1">Para produtos abaixo de R$ 30, a taxa fixa (R$ 6,25+) pesa muito percentualmente.</p>
+                        <p class="mt-2 font-semibold">Sugestão: Crie Kits de 2, 3 ou 5 unidades.</p>
+                        <p class="text-xs text-gray-600">Isso dilui a taxa fixa e o custo de envio por unidade, aumentando drasticamente sua margem.</p>
+                    </div>
+                `;
+            }
+
+            // 3. PREÇO PSICOLÓGICO
+            let decimal = price - Math.floor(price);
+            if (decimal < 0.90 && price > 10) {
+                 html += `
+                    <div class="strategy-card border-l-4 border-purple-500 bg-purple-50 mb-3 p-4 rounded shadow-sm text-sm">
+                        <h4 class="font-bold text-purple-700"><i class="fa-solid fa-brain"></i> Preço Psicológico</h4>
+                        <p class="text-gray-700 mt-1">Seu preço é R$ ${price.toFixed(2)}. Considere ajustar para <strong>R$ ${Math.floor(price)}.90</strong> ou <strong>R$ ${Math.floor(price)}.99</strong>.</p>
+                        <p class="text-xs text-gray-600">Finais .90 convertem melhor e passam a sensação de "oferta".</p>
+                    </div>
+                `;
+            }
+
+            // 4. OFERTA DE/POR
+            html += `
+                <div class="strategy-card border-l-4 border-gray-500 bg-gray-50 mb-3 p-4 rounded shadow-sm text-sm">
+                    <h4 class="font-bold text-gray-700"><i class="fa-solid fa-tags"></i> Ative a Tag "OFERTA"</h4>
+                    <p class="text-gray-700 mt-1">Para ganhar destaque, cadastre o preço "De" (Tabela) uns 15-20% acima e aplique o desconto.</p>
+                    <p class="text-xs text-gray-600">O algoritmo do ML prioriza anúncios com descontos reais e recentes.</p>
+                </div>
+            `;
+
+            panel.innerHTML = html;
         }
 
         // --- LÓGICA CORE (PREÇO POR) ---
@@ -819,10 +866,10 @@
                 document.getElementById('shippingCostUser').value = finalShipping.toFixed(2);
             }
 
-            updateUI(finalListPrice, finalSellingPrice, valPromoDiscount, netProfit, realMargin, valCommission, finalFixedFee, finalShipping, valTax, valAds, valTotalCosts, R, promo_pct, activeRuleText);
+            updateUI(finalListPrice, finalSellingPrice, valPromoDiscount, netProfit, realMargin, valCommission, finalFixedFee, finalShipping, valTax, valAds, valTotalCosts, R, promo_pct, activeRuleText, weightClass);
         }
 
-        function updateUI(listPrice, sellingPrice, promoDiscount, profit, margin, commission, fixedFee, shipping, tax, ads, costs, returns, promoPct, ruleText) {
+        function updateUI(listPrice, sellingPrice, promoDiscount, profit, margin, commission, fixedFee, shipping, tax, ads, costs, returns, promoPct, ruleText, weightClass) {
             const fmt = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
             document.getElementById('displayPrice').innerText = fmt(listPrice); 
@@ -871,13 +918,8 @@
             const label = (shipping === 0) ? 'Grátis p/ Vend.' : 'Tabela Oficial';
             document.getElementById('freteLabel').innerText = label;
 
-            costChart.data.datasets[0].data = [
-                costs + returns,           
-                commission + fixedFee + shipping,           
-                tax + ads,       
-                profit < 0 ? 0 : profit    
-            ];
-            costChart.update();
+            // ATUALIZA PAINEL DE ESTRATÉGIAS
+            updateStrategyPanel(sellingPrice, margin, weightClass);
         }
 
         window.onload = function() {
