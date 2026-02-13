@@ -63,11 +63,29 @@
         }
         .search-item:hover { background-color: #eff6ff; }
 
+        /* Tela de Login */
+        #auth-container {
+            display: flex;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2D3277 0%, #1e2252 100%);
+        }
+        .auth-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
         /* --- ESTILOS DE IMPRESSÃO (A4) --- */
         @media print {
             @page { size: A4 portrait; margin: 1cm; }
             body { background-color: white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; font-size: 12px; }
-            header, nav, .no-print, footer { display: none !important; }
+            header, nav, .no-print, footer, #auth-container { display: none !important; }
+            #app-container { display: block !important; }
             main { padding: 0; margin: 0; }
             .container { max-width: 100% !important; padding: 0 !important; }
             .grid { display: block !important; } 
@@ -80,722 +98,731 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
 
-    <!-- Header -->
-    <header class="bg-ml-blue text-white py-4 shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-4 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <i class="fa-solid fa-hand-holding-dollar text-2xl text-yellow-400"></i>
-                <div>
-                    <h1 class="text-xl font-bold">Precificação ML Pro 2026</h1>
-                    <p class="text-xs text-gray-300">Gestão Estratégica de Preço & Margem</p>
+    <!-- ================= TELA DE LOGIN / CADASTRO ================= -->
+    <div id="auth-container">
+        <div class="auth-box fade-in">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-hand-holding-dollar text-4xl text-yellow-400 mb-2"></i>
+                <h1 class="text-2xl font-bold text-gray-800">Precificação ML Pro</h1>
+                <p class="text-sm text-gray-500">Faça login para salvar seus produtos na nuvem</p>
+            </div>
+
+            <!-- Formulário Login -->
+            <div id="login-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="loginEmail" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500" placeholder="seu@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Senha</label>
+                        <input type="password" id="loginPass" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500" placeholder="********">
+                    </div>
+                    <div id="loginError" class="text-red-600 text-sm font-semibold hidden bg-red-100 p-2 rounded border border-red-200"></div>
+                    
+                    <button onclick="handleLogin()" class="w-full bg-ml-blue text-white py-2 rounded-md hover:bg-blue-900 transition font-bold">
+                        <i class="fa-solid fa-right-to-bracket mr-2"></i> Entrar
+                    </button>
+                    
+                    <div class="relative flex py-2 items-center">
+                        <div class="flex-grow border-t border-gray-300"></div>
+                        <span class="flex-shrink-0 mx-4 text-gray-400 text-xs">OU</span>
+                        <div class="flex-grow border-t border-gray-300"></div>
+                    </div>
+
+                    <button onclick="handleGuestLogin()" class="w-full bg-gray-200 text-gray-700 py-2 rounded-md hover:bg-gray-300 transition font-semibold text-sm">
+                        <i class="fa-solid fa-user-secret mr-2"></i> Entrar como Visitante
+                    </button>
+                </div>
+                <div class="mt-4 text-center text-sm">
+                    <span class="text-gray-600">Não tem conta?</span>
+                    <button onclick="toggleAuthMode()" class="text-blue-600 font-semibold hover:underline">Cadastre-se</button>
                 </div>
             </div>
-            <!-- Navegação de Abas -->
-            <nav class="flex gap-2 bg-blue-900/50 rounded-lg p-1">
-                <button onclick="switchTab('calc')" id="btn-tab-calc" class="px-4 py-1 text-sm font-semibold rounded text-white bg-blue-600 transition">
-                    <i class="fa-solid fa-calculator mr-1"></i> Calculadora
-                </button>
-                <button onclick="switchTab('sim')" id="btn-tab-sim" class="px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition">
-                    <i class="fa-solid fa-chart-line mr-1"></i> Simulador de Lucro
-                </button>
-                <button onclick="switchTab('products')" id="btn-tab-products" class="px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition">
-                    <i class="fa-solid fa-box-open mr-1"></i> Meus Produtos
-                </button>
-            </nav>
-        </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="flex-grow container mx-auto px-4 py-8 relative">
+            <!-- Formulário Cadastro -->
+            <div id="register-form" class="hidden">
+                <div class="space-y-4">
+                    <div class="bg-blue-50 text-blue-800 text-xs p-2 rounded mb-2">
+                        <i class="fa-solid fa-info-circle mr-1"></i> Crie uma conta nova para salvar seus dados.
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="regEmail" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Senha (Min 6 caracteres)</label>
+                        <input type="password" id="regPass" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div id="regError" class="text-red-600 text-sm font-semibold hidden bg-red-100 p-2 rounded border border-red-200"></div>
+                    <button onclick="handleRegister()" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition font-bold">
+                        <i class="fa-solid fa-user-plus mr-2"></i> Criar Conta
+                    </button>
+                </div>
+                <div class="mt-4 text-center text-sm">
+                    <span class="text-gray-600">Já tem conta?</span>
+                    <button onclick="toggleAuthMode()" class="text-blue-600 font-semibold hover:underline">Faça Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= APLICAÇÃO PRINCIPAL (HIDDEN POR DEFAULT) ================= -->
+    <div id="app-container" class="hidden min-h-screen flex flex-col">
         
-        <!-- ================= ABA CALCULADORA ================= -->
-        <div id="tab-calc" class="tab-content active fade-in">
-            <!-- Barra de Ações Fixa/Flutuante -->
-            <div class="flex justify-end gap-3 mb-4 no-print" data-html2canvas-ignore="true">
-                <button onclick="saveProduct()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 transition text-sm">
-                    <i class="fa-solid fa-save"></i> Salvar Produto
-                </button>
-                <button onclick="exportPdf()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 transition text-sm">
-                    <i class="fa-solid fa-file-pdf"></i> Salvar PDF (A4)
-                </button>
-                <button onclick="printContent()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 transition text-sm">
-                    <i class="fa-solid fa-print"></i> Imprimir
-                </button>
-            </div>
-
-            <!-- Conteúdo da Calculadora (ID para PDF) -->
-            <div id="calculator-content" class="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-gray-50/50 p-2">
-                <!-- Left Column: Inputs -->
-                <div class="lg:col-span-7 space-y-6">
-                    
-                    <!-- Section 0: Identificação -->
-                    <div class="bg-white p-6 rounded-lg card-shadow border-t-4 border-gray-600">
-                        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-tag mr-2"></i>Identificação do Produto</h2>
-                        <input type="hidden" id="productId"> 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="input-group">
-                                <label>Nome do Produto (Auto-Formatado)</label>
-                                <input type="text" id="productName" placeholder="Ex: Camiseta_Algodao_Preta" oninput="formatProductName(this)">
-                                <p class="text-xs text-gray-400 mt-1 no-print">Primeira letra maiúscula e "_" nos espaços.</p>
-                            </div>
-                            <div class="input-group">
-                                <label>SKU (Código Interno - Auto)</label>
-                                <input type="text" id="productSku" placeholder="Ex: CAM-001-P" oninput="formatSku(this)">
-                                <p class="text-xs text-gray-400 mt-1 no-print">MAIÚSCULO e hifens nos espaços.</p>
-                            </div>
-                        </div>
+        <!-- Header -->
+        <header class="bg-ml-blue text-white py-4 shadow-lg sticky top-0 z-50">
+            <div class="container mx-auto px-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-hand-holding-dollar text-2xl text-yellow-400"></i>
+                    <div>
+                        <h1 class="text-xl font-bold">Precificação ML Pro 2026</h1>
+                        <p class="text-xs text-gray-300">Gestão Estratégica de Preço & Margem</p>
                     </div>
-
-                    <!-- Section 1: Custos do Produto -->
-                    <div class="bg-white p-6 rounded-lg card-shadow border-t-4 border-blue-600">
-                        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-shirt mr-2"></i>Custos Unitários (Fábrica)</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="input-group">
-                                <label>CMV / Custo de Produção (R$)</label>
-                                <input type="number" id="costProduction" step="0.01" value="18.00" oninput="calculate()">
-                            </div>
-                            <div class="input-group">
-                                <label>Embalagem + Insumos (R$)</label>
-                                <input type="number" id="costPackaging" step="0.01" value="1.80" oninput="calculate()">
-                            </div>
-                            <div class="input-group">
-                                <label>Custos Operacionais/Overhead (R$)</label>
-                                <input type="number" id="costOverhead" step="0.01" value="2.50" oninput="calculate()">
-                            </div>
-                             <div class="input-group">
-                                <label>Previsão de Perdas/Brindes (R$)</label>
-                                <input type="number" id="costMisc" step="0.01" value="0.00" oninput="calculate()">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 2: Configuração ML -->
-                    <div class="bg-white p-6 rounded-lg card-shadow border-t-4 border-yellow-400">
-                        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-store mr-2"></i>Parâmetros Mercado Livre</h2>
-                        
-                        <div class="bg-yellow-50 p-3 rounded border border-yellow-200 mb-4">
-                            <div class="input-group">
-                                <label class="text-yellow-800"><i class="fa-solid fa-tags mr-1"></i> Categoria do Produto</label>
-                                <select id="categorySelect" onchange="updateCommissionPreset(); calculate()" class="border-yellow-300 ring-yellow-200">
-                                    <optgroup label="Moda Infantil e Geral (Taxa Padrão)">
-                                        <option value="padrao">Padrão / Outros (14% / 19%)</option>
-                                        <option value="bermudas">Bermudas e Shorts (Geral)</option>
-                                        <option value="blusas">Blusas</option>
-                                        <option value="calcas">Calças (Geral)</option>
-                                        <option value="camisas">Camisas</option>
-                                        <option value="camisetas">Camisetas e Regatas (Geral)</option>
-                                        <option value="kits">Kits de Conjuntos de Roupa</option>
-                                    </optgroup>
-                                    <optgroup label="Moda Fitness (Taxa Reduzida!)">
-                                        <option value="fitness_calcas">Calças e Joggings (Fitness)</option>
-                                        <option value="fitness_camisetas">Camisetas e Regatas (Fitness)</option>
-                                        <option value="fitness_conjuntos">Conjuntos (Fitness)</option>
-                                        <option value="fitness_leggings">Leggings</option>
-                                        <option value="fitness_shorts">Shorts e Bermudas (Fitness)</option>
-                                        <option value="fitness_tops">Tops de Fitness</option>
-                                    </optgroup>
-                                </select>
-                            </div>
-                            <p class="text-xs text-yellow-700 mt-1" id="categoryNote">Taxas padrão aplicadas.</p>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="input-group">
-                                <label>Tipo de Anúncio</label>
-                                <select id="listingType" onchange="updateCommissionPreset(); calculate()">
-                                    <option value="classic">Clássico (Exposição Alta)</option>
-                                    <option value="premium" selected>Premium (Máxima + Parc.)</option>
-                                </select>
-                            </div>
-                            <div class="input-group">
-                                <label>Comissão Automática (%)</label>
-                                <input type="number" id="feePercent" step="0.1" value="19.00" oninput="calculate()" class="bg-gray-50 font-bold text-gray-700">
-                            </div>
-                            
-                            <div class="col-span-1 md:col-span-2 bg-gray-50 p-3 rounded border border-gray-200">
-                                <div class="flex justify-between items-center mb-2">
-                                    <h3 class="text-sm font-bold text-gray-600">Logística (Mercado Envios)</h3>
-                                    <span class="badge-dynamic" id="statusFreteBadge">Calculando...</span>
-                                </div>
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div class="input-group">
-                                        <label>Peso Estimado (Cubado)</label>
-                                        <select id="weightClass" onchange="calculate()">
-                                            <option value="up_300">Até 300g (Moda leve)</option>
-                                            <option value="up_500">300g a 500g (Jeans/Kits)</option>
-                                            <option value="up_1kg">500g a 1kg (Inverno/Combos)</option>
-                                            <option value="up_2kg">1kg a 2kg (Kits Grandes)</option>
-                                            <option value="custom">Manual / Full</option>
-                                        </select>
-                                    </div>
-                                    <div class="input-group">
-                                        <label>Custo Frete Calculado (R$)</label>
-                                        <input type="number" id="shippingCostUser" step="0.01" value="0.00" class="bg-gray-100 text-gray-600" readonly>
-                                    </div>
-                                </div>
-                                
-                                <div class="mt-2 text-xs p-2 border rounded transition-colors" id="freteRuleBox">
-                                    <p class="font-bold mb-1"><i class="fa-solid fa-robot mr-1"></i> Regra Ativa para este Preço:</p>
-                                    <p id="freteRuleText">...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 3: Fiscal, Marketing, Promoções e Riscos -->
-                    <div class="bg-white p-6 rounded-lg card-shadow border-t-4 border-green-500">
-                        <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-calculator mr-2"></i>Fiscal, Marketing e Estratégia</h2>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Imposto -->
-                            <div class="input-group">
-                                <label>Imposto (Simples/Outros) %</label>
-                                <input type="number" id="taxRate" step="0.1" value="8.00" oninput="calculate()">
-                            </div>
-                            
-                            <!-- Margem Desejada -->
-                            <div class="input-group">
-                                <label>Margem Líquida Desejada %
-                                    <span class="tooltip"><i class="fa-regular fa-circle-question text-gray-400"></i>
-                                        <span class="tooltiptext">Calculada sobre o Preço Final (Por).</span>
-                                    </span>
-                                </label>
-                                <input type="number" id="targetMargin" step="1.0" value="25.00" class="border-green-500 ring-1 ring-green-200 bg-green-50" oninput="calculate()">
-                            </div>
-
-                            <!-- Ads -->
-                            <div class="input-group">
-                                <label>Ads (ACOS Alvo) %
-                                    <span class="tooltip"><i class="fa-regular fa-circle-question text-gray-400"></i>
-                                        <span class="tooltiptext">Aplicado sobre o preço da venda real (Por).</span>
-                                    </span>
-                                </label>
-                                <input type="number" id="adsAcos" step="0.5" value="7.00" oninput="calculate()">
-                            </div>
-
-                            <!-- Promoção -->
-                            <div class="input-group">
-                                <label class="text-purple-700 font-bold"><i class="fa-solid fa-percent mr-1"></i> Promoção / Desconto (%)
-                                    <span class="tooltip"><i class="fa-regular fa-circle-question text-gray-400"></i>
-                                        <span class="tooltiptext">Quanto desconto você dará sobre o preço cheio.</span>
-                                    </span>
-                                </label>
-                                <input type="number" id="promoRate" step="1.0" value="10.00" class="border-purple-300 ring-2 ring-purple-100 bg-purple-50 font-semibold text-purple-900" oninput="calculate()">
-                            </div>
-                        </div>
-                        
-                        <!-- Devolução -->
-                        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
-                            <div class="input-group">
-                                <label>Taxa de Devolução Esperada (%)</label>
-                                <input type="number" id="returnRate" step="0.1" value="3.00" oninput="calculate()">
-                            </div>
-                            <div class="input-group">
-                                <label>Custo Médio por Devolução (R$)
-                                     <span class="tooltip"><i class="fa-regular fa-circle-question text-gray-400"></i>
-                                        <span class="tooltiptext">Custo de manuseio, embalagem nova, frete reverso (se houver).</span>
-                                    </span>
-                                </label>
-                                <input type="number" id="returnUnitCost" step="1.0" value="20.00" oninput="calculate()">
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
-
-                <!-- Right Column: Results -->
-                <div class="lg:col-span-5 space-y-6">
-                    
-                    <!-- Main Result Card -->
-                    <div class="bg-ml-blue text-white p-6 rounded-lg shadow-xl relative overflow-hidden">
-                        <div class="absolute top-0 right-0 p-4 opacity-10">
-                            <i class="fa-solid fa-tags text-9xl"></i>
-                        </div>
-                        
-                        <!-- PROMO PRICE SECTION (HIGHLIGHTED) -->
-                        <div class="mb-4 pb-4 border-b border-blue-400/30">
-                            <div class="flex justify-between items-end">
-                                <div>
-                                    <span class="text-green-300 text-sm font-semibold uppercase tracking-wider"><i class="fa-solid fa-cart-shopping mr-1"></i> Preço para o Cliente (Por)</span>
-                                    <div class="font-bold text-5xl text-green-400 price-transition mt-1" id="displayPromoPrice">R$ 0,00</div>
-                                </div>
-                            </div>
-                            <div class="text-xs text-blue-200 mt-2">
-                                 Base para cálculo de Taxas, Impostos e Lucro. Arredondado para .90/.99.
-                            </div>
-                        </div>
-
-                        <!-- LIST PRICE SECTION -->
-                        <div class="flex justify-between items-center opacity-80">
-                             <span class="text-gray-300 text-sm">Anunciar por (Preço De):</span>
-                             <span class="text-xl font-bold text-yellow-400 price-transition line-through decoration-red-500/50" id="displayPrice">R$ 0,00</span>
-                        </div>
-                        <div class="text-right text-xs text-yellow-200/70 mb-2">
-                            Considerando <span id="promoPctDisplay">0</span>% de desconto
-                        </div>
-
-                        <div class="flex gap-4 text-sm mt-4 pt-2 border-t border-blue-800">
-                             <div>
-                                <span class="block text-gray-300 text-xs">Margem Líquida</span>
-                                <span class="font-bold text-lg" id="displayNetProfit">R$ 0,00</span>
-                            </div>
-                            <div class="border-l border-gray-600 pl-4">
-                                <span class="block text-gray-300 text-xs">% Real (Sobre o Por)</span>
-                                <span class="font-bold text-lg" id="displayNetMargin">0%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Breakdown Table -->
-                    <div class="bg-white p-6 rounded-lg card-shadow">
-                        <h3 class="font-bold text-gray-700 mb-4">DRE da Venda (Unitário)</h3>
-                        <table class="w-full text-sm">
-                            <tbody class="divide-y divide-gray-100">
-                                <!-- PREÇO CHEIO -->
-                                <tr class="text-gray-400 text-xs">
-                                    <td class="py-1">Preço Sugerido (De)</td>
-                                    <td class="py-1 text-right" id="tblListPrice">R$ 0,00</td>
-                                </tr>
-                                <tr class="text-purple-400 text-xs">
-                                    <td class="py-1 pl-2 border-l-2 border-purple-200">(-) Desconto Aplicado</td>
-                                    <td class="py-1 text-right" id="tblPromoDiscount">R$ 0,00</td>
-                                </tr>
-                                
-                                <!-- PREÇO VENDA -->
-                                <tr class="font-bold text-base bg-gray-50">
-                                    <td class="py-2 text-gray-800">(=) Preço Venda (Por)</td>
-                                    <td class="py-2 text-right text-green-700" id="tblSellingPrice">R$ 0,00</td>
-                                </tr>
-
-                                <!-- CUSTOS -->
-                                <tr class="text-red-500">
-                                    <td class="py-2 pl-2 border-l-2 border-red-200">(-) Comissão ML (%)</td>
-                                    <td class="py-2 text-right" id="tblCommission">R$ 0,00</td>
-                                </tr>
-                                <tr class="text-red-600 font-medium bg-red-50">
-                                    <td class="py-2 pl-2 border-l-2 border-red-300">(-) Taxa Fixa ML (R$)</td>
-                                    <td class="py-2 text-right" id="tblFixedFee">R$ 0,00</td>
-                                </tr>
-                                 <tr class="text-red-500">
-                                    <td class="py-2 pl-2 border-l-2 border-red-200">(-) Frete (<span id="freteLabel">Dinâmico</span>)</td>
-                                    <td class="py-2 text-right" id="tblShipping">R$ 0,00</td>
-                                </tr>
-                                <tr class="text-orange-500">
-                                    <td class="py-2 pl-2 border-l-2 border-orange-200">(-) Impostos (Sobre o Por)</td>
-                                    <td class="py-2 text-right" id="tblTax">R$ 0,00</td>
-                                </tr>
-                                <tr class="text-orange-500">
-                                    <td class="py-2 pl-2 border-l-2 border-orange-200">(-) Ads / Marketing</td>
-                                    <td class="py-2 text-right" id="tblAds">R$ 0,00</td>
-                                </tr>
-                                <tr class="text-gray-500">
-                                    <td class="py-2 pl-2 border-l-2 border-gray-200">(-) Custo Produto + Emb.</td>
-                                    <td class="py-2 text-right" id="tblProductCost">R$ 0,00</td>
-                                </tr>
-                                <tr class="text-gray-500">
-                                    <td class="py-2 pl-2 border-l-2 border-gray-200">(-) Previsão Devoluções</td>
-                                    <td class="py-2 text-right" id="tblReturns">R$ 0,00</td>
-                                </tr>
-                                <tr class="bg-green-100 font-bold text-green-800 text-base">
-                                    <td class="py-3 pl-2 rounded-l">(=) Lucro Líquido</td>
-                                    <td class="py-3 text-right rounded-r" id="tblProfit">R$ 0,00</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- ESTRATÉGIAS DE PREÇO (SUBSTITUI O GRÁFICO) -->
-                    <div class="bg-white p-6 rounded-lg card-shadow">
-                        <h3 class="font-bold text-gray-700 mb-4 text-center"><i class="fa-solid fa-lightbulb text-yellow-500"></i> Estratégias & Oportunidades</h3>
-                        <div id="strategyContent" class="space-y-3">
-                            <!-- JS preencherá aqui -->
-                        </div>
-                    </div>
-
+                <!-- Navegação de Abas -->
+                <div class="flex items-center gap-4">
+                    <nav class="flex gap-2 bg-blue-900/50 rounded-lg p-1">
+                        <button onclick="switchTab('calc')" id="btn-tab-calc" class="px-4 py-1 text-sm font-semibold rounded text-white bg-blue-600 transition">
+                            <i class="fa-solid fa-calculator mr-1"></i> Calculadora
+                        </button>
+                        <button onclick="switchTab('sim')" id="btn-tab-sim" class="px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition">
+                            <i class="fa-solid fa-chart-line mr-1"></i> Simulador
+                        </button>
+                        <button onclick="switchTab('products')" id="btn-tab-products" class="px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition">
+                            <i class="fa-solid fa-box-open mr-1"></i> Meus Produtos
+                        </button>
+                    </nav>
+                    <button onclick="handleLogout()" class="text-gray-300 hover:text-white" title="Sair">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <!-- ================= ABA SIMULADOR ================= -->
-        <div id="tab-sim" class="tab-content fade-in">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- Painel de Controle -->
-                <div class="lg:col-span-4 bg-white p-6 rounded-lg card-shadow">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fa-solid fa-flask text-blue-500 mr-2"></i>Simular Venda</h2>
-                    
-                    <!-- Search Product in Simulator -->
-                    <div class="mb-6 relative">
-                        <label class="block text-sm font-semibold text-gray-600 mb-1">Buscar Produto Salvo</label>
-                        <div class="relative">
-                            <input type="text" id="simSearchInput" 
-                                   placeholder="Nome ou SKU..." 
-                                   oninput="formatProductName(this); searchSimProducts()"
-                                   class="w-full pl-3 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50">
-                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
-                                <i class="fa-solid fa-search"></i>
-                            </div>
-                        </div>
-                        <div id="simSearchResults" class="search-results"></div>
-                        <div id="simLoadedProduct" class="hidden mt-2 text-xs text-green-600 font-bold bg-green-50 p-2 rounded border border-green-200">
-                            <i class="fa-solid fa-check mr-1"></i> Carregado: <span id="simLoadedName">...</span>
-                        </div>
-                    </div>
-
-                    <!-- Inputs de Preço -->
-                    <div class="space-y-4 mb-6 border-t pt-4 border-gray-100">
-                        <!-- LIST PRICE (PREÇO DE) -->
-                        <div class="input-group">
-                            <label class="text-sm text-gray-500 font-semibold">Anunciar por (Preço De):</label>
-                            <input type="number" id="simListPriceInput" step="0.01" class="w-full text-lg font-semibold text-gray-500 p-2 border border-gray-300 rounded bg-gray-50" placeholder="0,00" oninput="calculateSimulation()">
-                        </div>
-
-                        <!-- SELLING PRICE (PREÇO POR) -->
-                        <div class="input-group">
-                            <label class="text-lg text-blue-800 font-bold">Preço de Venda (Por)</label>
-                            <input type="number" id="simPriceInput" step="0.01" class="w-full text-3xl font-bold text-blue-600 p-3 border-2 border-blue-200 rounded-lg shadow-inner" placeholder="0,00" oninput="calculateSimulation()">
-                        </div>
-
-                        <!-- DISPLAY DISCOUNT -->
-                        <div class="flex justify-between items-center bg-purple-50 p-3 rounded border border-purple-100">
-                            <span class="text-purple-800 font-semibold text-sm">Desconto Aplicado:</span>
-                            <span id="simDiscountDisplay" class="font-bold text-xl text-purple-600">0%</span>
-                        </div>
-                    </div>
-
-                    <button onclick="calculateSimulation()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded shadow transition transform hover:scale-105">
-                        Calcular Lucro
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-4 py-8 relative">
+            
+            <!-- ABA CALCULADORA -->
+            <div id="tab-calc" class="tab-content active fade-in">
+                <!-- Barra de Ações -->
+                <div class="flex justify-end gap-3 mb-4 no-print" data-html2canvas-ignore="true">
+                    <button onclick="saveProduct()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 transition text-sm">
+                        <i class="fa-solid fa-save"></i> Salvar Produto
+                    </button>
+                    <button onclick="exportPdf()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 transition text-sm">
+                        <i class="fa-solid fa-file-pdf"></i> Salvar PDF (A4)
+                    </button>
+                    <button onclick="printContent()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 transition text-sm">
+                        <i class="fa-solid fa-print"></i> Imprimir
                     </button>
                 </div>
 
-                <!-- Painel de Resultado -->
-                <div class="lg:col-span-8 space-y-6">
-                    <!-- Cards de Resultado -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-white p-6 rounded-lg card-shadow text-center">
-                            <h3 class="text-gray-500 text-sm font-semibold uppercase">Lucro Líquido (R$)</h3>
-                            <div class="text-4xl font-bold text-gray-800 mt-2" id="simProfitVal">R$ 0,00</div>
+                <!-- Conteúdo da Calculadora (ID para PDF) -->
+                <div id="calculator-content" class="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-gray-50/50 p-2">
+                    <!-- Left Column: Inputs -->
+                    <div class="lg:col-span-7 space-y-6">
+                        
+                        <!-- Section 0: Identificação -->
+                        <div class="bg-white p-6 rounded-lg card-shadow border-t-4 border-gray-600">
+                            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-tag mr-2"></i>Identificação do Produto</h2>
+                            <input type="hidden" id="productId"> 
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="input-group">
+                                    <label>Nome do Produto (Auto-Formatado)</label>
+                                    <input type="text" id="productName" placeholder="Ex: Camiseta_Algodao_Preta" oninput="formatProductName(this)">
+                                    <p class="text-xs text-gray-400 mt-1 no-print">Primeira letra maiúscula e "_" nos espaços.</p>
+                                </div>
+                                <div class="input-group">
+                                    <label>SKU (Código Interno - Auto)</label>
+                                    <input type="text" id="productSku" placeholder="Ex: CAM-001-P" oninput="formatSku(this)">
+                                    <p class="text-xs text-gray-400 mt-1 no-print">MAIÚSCULO e hifens nos espaços.</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-white p-6 rounded-lg card-shadow text-center">
-                            <h3 class="text-gray-500 text-sm font-semibold uppercase">Margem Líquida (%)</h3>
-                            <div class="text-4xl font-bold text-gray-800 mt-2" id="simMarginVal">0.00%</div>
+
+                        <!-- Section 1: Custos do Produto -->
+                        <div class="bg-white p-6 rounded-lg card-shadow border-t-4 border-blue-600">
+                            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-shirt mr-2"></i>Custos Unitários (Fábrica)</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="input-group">
+                                    <label>CMV / Custo de Produção (R$)</label>
+                                    <input type="number" id="costProduction" step="0.01" value="18.00" oninput="calculate()">
+                                </div>
+                                <div class="input-group">
+                                    <label>Embalagem + Insumos (R$)</label>
+                                    <input type="number" id="costPackaging" step="0.01" value="1.80" oninput="calculate()">
+                                </div>
+                                <div class="input-group">
+                                    <label>Custos Operacionais/Overhead (R$)</label>
+                                    <input type="number" id="costOverhead" step="0.01" value="2.50" oninput="calculate()">
+                                </div>
+                                 <div class="input-group">
+                                    <label>Previsão de Perdas/Brindes (R$)</label>
+                                    <input type="number" id="costMisc" step="0.01" value="0.00" oninput="calculate()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Configuração ML -->
+                        <div class="bg-white p-6 rounded-lg card-shadow border-t-4 border-yellow-400">
+                            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-store mr-2"></i>Parâmetros Mercado Livre</h2>
+                            
+                            <div class="bg-yellow-50 p-3 rounded border border-yellow-200 mb-4">
+                                <div class="input-group">
+                                    <label class="text-yellow-800"><i class="fa-solid fa-tags mr-1"></i> Categoria do Produto</label>
+                                    <select id="categorySelect" onchange="updateCommissionPreset(); calculate()" class="border-yellow-300 ring-yellow-200">
+                                        <optgroup label="Moda Infantil e Geral (Taxa Padrão)">
+                                            <option value="padrao">Padrão / Outros (14% / 19%)</option>
+                                            <option value="bermudas">Bermudas e Shorts (Geral)</option>
+                                            <option value="blusas">Blusas</option>
+                                            <option value="calcas">Calças (Geral)</option>
+                                            <option value="camisas">Camisas</option>
+                                            <option value="camisetas">Camisetas e Regatas (Geral)</option>
+                                            <option value="kits">Kits de Conjuntos de Roupa</option>
+                                        </optgroup>
+                                        <optgroup label="Moda Fitness (Taxa Reduzida!)">
+                                            <option value="fitness_calcas">Calças e Joggings (Fitness)</option>
+                                            <option value="fitness_camisetas">Camisetas e Regatas (Fitness)</option>
+                                            <option value="fitness_conjuntos">Conjuntos (Fitness)</option>
+                                            <option value="fitness_leggings">Leggings</option>
+                                            <option value="fitness_shorts">Shorts e Bermudas (Fitness)</option>
+                                            <option value="fitness_tops">Tops de Fitness</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                <p class="text-xs text-yellow-700 mt-1" id="categoryNote">Taxas padrão aplicadas.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="input-group">
+                                    <label>Tipo de Anúncio</label>
+                                    <select id="listingType" onchange="updateCommissionPreset(); calculate()">
+                                        <option value="classic">Clássico (Exposição Alta)</option>
+                                        <option value="premium" selected>Premium (Máxima + Parc.)</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Comissão Automática (%)</label>
+                                    <input type="number" id="feePercent" step="0.1" value="19.00" oninput="calculate()" class="bg-gray-50 font-bold text-gray-700">
+                                </div>
+                                
+                                <div class="col-span-1 md:col-span-2 bg-gray-50 p-3 rounded border border-gray-200">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h3 class="text-sm font-bold text-gray-600">Logística (Mercado Envios)</h3>
+                                        <span class="badge-dynamic" id="statusFreteBadge">Calculando...</span>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="input-group">
+                                            <label>Peso Estimado (Cubado)</label>
+                                            <select id="weightClass" onchange="calculate()">
+                                                <option value="up_300">Até 300g (Moda leve)</option>
+                                                <option value="up_500">300g a 500g (Jeans/Kits)</option>
+                                                <option value="up_1kg">500g a 1kg (Inverno/Combos)</option>
+                                                <option value="up_2kg">1kg a 2kg (Kits Grandes)</option>
+                                                <option value="custom">Manual / Full</option>
+                                            </select>
+                                        </div>
+                                        <div class="input-group">
+                                            <label>Custo Frete Calculado (R$)</label>
+                                            <input type="number" id="shippingCostUser" step="0.01" value="0.00" class="bg-gray-100 text-gray-600" readonly>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-2 text-xs p-2 border rounded transition-colors" id="freteRuleBox">
+                                        <p class="font-bold mb-1"><i class="fa-solid fa-robot mr-1"></i> Regra Ativa para este Preço:</p>
+                                        <p id="freteRuleText">...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Fiscal, Marketing, Promoções e Riscos -->
+                        <div class="bg-white p-6 rounded-lg card-shadow border-t-4 border-green-500">
+                            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-calculator mr-2"></i>Fiscal, Marketing e Estratégia</h2>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Imposto -->
+                                <div class="input-group">
+                                    <label>Imposto (Simples/Outros) %</label>
+                                    <input type="number" id="taxRate" step="0.1" value="8.00" oninput="calculate()">
+                                </div>
+                                
+                                <!-- Margem Desejada -->
+                                <div class="input-group">
+                                    <label>Margem Líquida Desejada %
+                                        <span class="tooltip"><i class="fa-regular fa-circle-question text-gray-400"></i>
+                                            <span class="tooltiptext">Calculada sobre o Preço Final (Por).</span>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="targetMargin" step="1.0" value="25.00" class="border-green-500 ring-1 ring-green-200 bg-green-50" oninput="calculate()">
+                                </div>
+
+                                <!-- Ads -->
+                                <div class="input-group">
+                                    <label>Ads (ACOS Alvo) %
+                                        <span class="tooltip"><i class="fa-regular fa-circle-question text-gray-400"></i>
+                                            <span class="tooltiptext">Aplicado sobre o preço da venda real (Por).</span>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="adsAcos" step="0.5" value="7.00" oninput="calculate()">
+                                </div>
+
+                                <!-- Promoção -->
+                                <div class="input-group">
+                                    <label class="text-purple-700 font-bold"><i class="fa-solid fa-percent mr-1"></i> Promoção / Desconto (%)
+                                        <span class="tooltip"><i class="fa-regular fa-circle-question text-gray-400"></i>
+                                            <span class="tooltiptext">Quanto desconto você dará sobre o preço cheio.</span>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="promoRate" step="1.0" value="10.00" class="border-purple-300 ring-2 ring-purple-100 bg-purple-50 font-semibold text-purple-900" oninput="calculate()">
+                                </div>
+                            </div>
+                            
+                            <!-- Devolução -->
+                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                                <div class="input-group">
+                                    <label>Taxa de Devolução Esperada (%)</label>
+                                    <input type="number" id="returnRate" step="0.1" value="3.00" oninput="calculate()">
+                                </div>
+                                <div class="input-group">
+                                    <label>Custo Médio por Devolução (R$)
+                                         <span class="tooltip"><i class="fa-regular fa-circle-question text-gray-400"></i>
+                                            <span class="tooltiptext">Custo de manuseio, embalagem nova, frete reverso (se houver).</span>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="returnUnitCost" step="1.0" value="20.00" oninput="calculate()">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right Column: Results -->
+                    <div class="lg:col-span-5 space-y-6">
+                        
+                        <!-- Main Result Card -->
+                        <div class="bg-ml-blue text-white p-6 rounded-lg shadow-xl relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-4 opacity-10">
+                                <i class="fa-solid fa-tags text-9xl"></i>
+                            </div>
+                            
+                            <!-- PROMO PRICE SECTION (HIGHLIGHTED) -->
+                            <div class="mb-4 pb-4 border-b border-blue-400/30">
+                                <div class="flex justify-between items-end">
+                                    <div>
+                                        <span class="text-green-300 text-sm font-semibold uppercase tracking-wider"><i class="fa-solid fa-cart-shopping mr-1"></i> Preço para o Cliente (Por)</span>
+                                        <div class="font-bold text-5xl text-green-400 price-transition mt-1" id="displayPromoPrice">R$ 0,00</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-blue-200 mt-2">
+                                     Base para cálculo de Taxas, Impostos e Lucro. Arredondado para .90/.99.
+                                </div>
+                            </div>
+
+                            <!-- LIST PRICE SECTION -->
+                            <div class="flex justify-between items-center opacity-80">
+                                 <span class="text-gray-300 text-sm">Anunciar por (Preço De):</span>
+                                 <span class="text-xl font-bold text-yellow-400 price-transition line-through decoration-red-500/50" id="displayPrice">R$ 0,00</span>
+                            </div>
+                            <div class="text-right text-xs text-yellow-200/70 mb-2">
+                                Considerando <span id="promoPctDisplay">0</span>% de desconto
+                            </div>
+
+                            <div class="flex gap-4 text-sm mt-4 pt-2 border-t border-blue-800">
+                                 <div>
+                                    <span class="block text-gray-300 text-xs">Margem Líquida</span>
+                                    <span class="font-bold text-lg" id="displayNetProfit">R$ 0,00</span>
+                                </div>
+                                <div class="border-l border-gray-600 pl-4">
+                                    <span class="block text-gray-300 text-xs">% Real (Sobre o Por)</span>
+                                    <span class="font-bold text-lg" id="displayNetMargin">0%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Breakdown Table -->
+                        <div class="bg-white p-6 rounded-lg card-shadow">
+                            <h3 class="font-bold text-gray-700 mb-4">DRE da Venda (Unitário)</h3>
+                            <table class="w-full text-sm">
+                                <tbody class="divide-y divide-gray-100">
+                                    <!-- PREÇO CHEIO -->
+                                    <tr class="text-gray-400 text-xs">
+                                        <td class="py-1">Preço Sugerido (De)</td>
+                                        <td class="py-1 text-right" id="tblListPrice">R$ 0,00</td>
+                                    </tr>
+                                    <tr class="text-purple-400 text-xs">
+                                        <td class="py-1 pl-2 border-l-2 border-purple-200">(-) Desconto Aplicado</td>
+                                        <td class="py-1 text-right" id="tblPromoDiscount">R$ 0,00</td>
+                                    </tr>
+                                    
+                                    <!-- PREÇO VENDA -->
+                                    <tr class="font-bold text-base bg-gray-50">
+                                        <td class="py-2 text-gray-800">(=) Preço Venda (Por)</td>
+                                        <td class="py-2 text-right text-green-700" id="tblSellingPrice">R$ 0,00</td>
+                                    </tr>
+
+                                    <!-- CUSTOS -->
+                                    <tr class="text-red-500">
+                                        <td class="py-2 pl-2 border-l-2 border-red-200">(-) Comissão ML (%)</td>
+                                        <td class="py-2 text-right" id="tblCommission">R$ 0,00</td>
+                                    </tr>
+                                    <tr class="text-red-600 font-medium bg-red-50">
+                                        <td class="py-2 pl-2 border-l-2 border-red-300">(-) Taxa Fixa ML (R$)</td>
+                                        <td class="py-2 text-right" id="tblFixedFee">R$ 0,00</td>
+                                    </tr>
+                                     <tr class="text-red-500">
+                                        <td class="py-2 pl-2 border-l-2 border-red-200">(-) Frete (<span id="freteLabel">Dinâmico</span>)</td>
+                                        <td class="py-2 text-right" id="tblShipping">R$ 0,00</td>
+                                    </tr>
+                                    <tr class="text-orange-500">
+                                        <td class="py-2 pl-2 border-l-2 border-orange-200">(-) Impostos (Sobre o Por)</td>
+                                        <td class="py-2 text-right" id="tblTax">R$ 0,00</td>
+                                    </tr>
+                                    <tr class="text-orange-500">
+                                        <td class="py-2 pl-2 border-l-2 border-orange-200">(-) Ads / Marketing</td>
+                                        <td class="py-2 text-right" id="tblAds">R$ 0,00</td>
+                                    </tr>
+                                    <tr class="text-gray-500">
+                                        <td class="py-2 pl-2 border-l-2 border-gray-200">(-) Custo Produto + Emb.</td>
+                                        <td class="py-2 text-right" id="tblProductCost">R$ 0,00</td>
+                                    </tr>
+                                    <tr class="text-gray-500">
+                                        <td class="py-2 pl-2 border-l-2 border-gray-200">(-) Previsão Devoluções</td>
+                                        <td class="py-2 text-right" id="tblReturns">R$ 0,00</td>
+                                    </tr>
+                                    <tr class="bg-green-100 font-bold text-green-800 text-base">
+                                        <td class="py-3 pl-2 rounded-l">(=) Lucro Líquido</td>
+                                        <td class="py-3 text-right rounded-r" id="tblProfit">R$ 0,00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- ESTRATÉGIAS DE PREÇO (SUBSTITUI O GRÁFICO) -->
+                        <div class="bg-white p-6 rounded-lg card-shadow">
+                            <h3 class="font-bold text-gray-700 mb-4 text-center"><i class="fa-solid fa-lightbulb text-yellow-500"></i> Estratégias & Oportunidades</h3>
+                            <div id="strategyContent" class="space-y-3">
+                                <!-- JS preencherá aqui -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= ABA SIMULADOR ================= -->
+            <div id="tab-sim" class="tab-content fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Painel de Controle -->
+                    <div class="lg:col-span-4 bg-white p-6 rounded-lg card-shadow">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fa-solid fa-flask text-blue-500 mr-2"></i>Simular Venda</h2>
+                        
+                        <!-- Search Product in Simulator -->
+                        <div class="mb-6 relative">
+                            <label class="block text-sm font-semibold text-gray-600 mb-1">Buscar Produto Salvo</label>
+                            <div class="relative">
+                                <input type="text" id="simSearchInput" 
+                                       placeholder="Nome ou SKU..." 
+                                       oninput="formatProductName(this); searchSimProducts()"
+                                       class="w-full pl-3 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+                                    <i class="fa-solid fa-search"></i>
+                                </div>
+                            </div>
+                            <div id="simSearchResults" class="search-results"></div>
+                            <div id="simLoadedProduct" class="hidden mt-2 text-xs text-green-600 font-bold bg-green-50 p-2 rounded border border-green-200">
+                                <i class="fa-solid fa-check mr-1"></i> Carregado: <span id="simLoadedName">...</span>
+                            </div>
+                        </div>
+
+                        <!-- Inputs de Preço -->
+                        <div class="space-y-4 mb-6 border-t pt-4 border-gray-100">
+                            <!-- LIST PRICE (PREÇO DE) -->
+                            <div class="input-group">
+                                <label class="text-sm text-gray-500 font-semibold">Anunciar por (Preço De):</label>
+                                <input type="number" id="simListPriceInput" step="0.01" class="w-full text-lg font-semibold text-gray-500 p-2 border border-gray-300 rounded bg-gray-50" placeholder="0,00" oninput="calculateSimulation()">
+                            </div>
+
+                            <!-- SELLING PRICE (PREÇO POR) -->
+                            <div class="input-group">
+                                <label class="text-lg text-blue-800 font-bold">Preço de Venda (Por)</label>
+                                <input type="number" id="simPriceInput" step="0.01" class="w-full text-3xl font-bold text-blue-600 p-3 border-2 border-blue-200 rounded-lg shadow-inner" placeholder="0,00" oninput="calculateSimulation()">
+                            </div>
+
+                            <!-- DISPLAY DISCOUNT -->
+                            <div class="flex justify-between items-center bg-purple-50 p-3 rounded border border-purple-100">
+                                <span class="text-purple-800 font-semibold text-sm">Desconto Aplicado:</span>
+                                <span id="simDiscountDisplay" class="font-bold text-xl text-purple-600">0%</span>
+                            </div>
+                        </div>
+
+                        <button onclick="calculateSimulation()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded shadow transition transform hover:scale-105">
+                            Calcular Lucro
+                        </button>
+                    </div>
+
+                    <!-- Painel de Resultado -->
+                    <div class="lg:col-span-8 space-y-6">
+                        <!-- Cards de Resultado -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-6 rounded-lg card-shadow text-center">
+                                <h3 class="text-gray-500 text-sm font-semibold uppercase">Lucro Líquido (R$)</h3>
+                                <div class="text-4xl font-bold text-gray-800 mt-2" id="simProfitVal">R$ 0,00</div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg card-shadow text-center">
+                                <h3 class="text-gray-500 text-sm font-semibold uppercase">Margem Líquida (%)</h3>
+                                <div class="text-4xl font-bold text-gray-800 mt-2" id="simMarginVal">0.00%</div>
+                            </div>
+                        </div>
+
+                        <!-- DRE Detalhado -->
+                        <div class="bg-white p-6 rounded-lg card-shadow">
+                            <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">DRE da Simulação (Unitário)</h3>
+                            <table class="w-full text-sm">
+                                <tbody class="divide-y divide-gray-100" id="simDRETable">
+                                    <!-- Preenchido via JS -->
+                                    <tr><td class="py-4 text-center text-gray-400">Insira um valor e clique em Calcular.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= ABA PRODUTOS SALVOS ================= -->
+            <div id="tab-products" class="tab-content fade-in">
+                <!-- (Conteúdo Mantido) -->
+                <div class="bg-white p-6 rounded-lg card-shadow">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-list mr-2"></i>Meus Produtos Salvos</h2>
+                        
+                        <!-- Search Box -->
+                        <div class="w-full md:w-1/3 relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-search text-gray-400"></i>
+                            </div>
+                            <input type="text" id="searchProduct" 
+                                   placeholder="Pesquisar Produto ou SKU..." 
+                                   oninput="formatProductName(this); filterProducts()" 
+                                   class="pl-10 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
                     </div>
 
-                    <!-- DRE Detalhado -->
-                    <div class="bg-white p-6 rounded-lg card-shadow">
-                        <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">DRE da Simulação (Unitário)</h3>
-                        <table class="w-full text-sm">
-                            <tbody class="divide-y divide-gray-100" id="simDRETable">
-                                <!-- Preenchido via JS -->
-                                <tr><td class="py-4 text-center text-gray-400">Insira um valor e clique em Calcular.</td></tr>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 text-sm uppercase">
+                                    <th class="p-3 border-b">Produto</th>
+                                    <th class="p-3 border-b">SKU</th>
+                                    <th class="p-3 border-b text-right">Preço (Por)</th>
+                                    <th class="p-3 border-b text-right">Margem %</th>
+                                    <th class="p-3 border-b text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody" class="text-sm divide-y divide-gray-100">
+                                <!-- JS preencherá aqui -->
+                                <tr>
+                                    <td colspan="5" class="p-6 text-center text-gray-400">Nenhum produto salvo ainda.</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ================= ABA PRODUTOS SALVOS ================= -->
-        <div id="tab-products" class="tab-content fade-in">
-            <!-- (Conteúdo Mantido) -->
-            <div class="bg-white p-6 rounded-lg card-shadow">
-                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                    <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-list mr-2"></i>Meus Produtos Salvos</h2>
-                    
-                    <!-- Search Box -->
-                    <div class="w-full md:w-1/3 relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-search text-gray-400"></i>
-                        </div>
-                        <input type="text" id="searchProduct" 
-                               placeholder="Pesquisar Produto ou SKU..." 
-                               oninput="formatProductName(this); filterProducts()" 
-                               class="pl-10 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                </div>
+        </main>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-100 text-gray-600 text-sm uppercase">
-                                <th class="p-3 border-b">Produto</th>
-                                <th class="p-3 border-b">SKU</th>
-                                <th class="p-3 border-b text-right">Preço (Por)</th>
-                                <th class="p-3 border-b text-right">Margem %</th>
-                                <th class="p-3 border-b text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productsTableBody" class="text-sm divide-y divide-gray-100">
-                            <!-- JS preencherá aqui -->
-                            <tr>
-                                <td colspan="5" class="p-6 text-center text-gray-400">Nenhum produto salvo ainda.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-gray-400 py-6 text-center text-sm">
+            <p>Desenvolvido para Fabricantes de Moda Infantil e Fitness.</p>
+            <p class="text-xs mt-2">Cálculos baseados no "Preço Por" (preço efetivo da transação).</p>
+        </footer>
+    </div>
 
-    </main>
+    <!-- FIREBASE INTEGRATION -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-gray-400 py-6 text-center text-sm">
-        <p>Desenvolvido para Fabricantes de Moda Infantil e Fitness.</p>
-        <p class="text-xs mt-2">Cálculos baseados no "Preço Por" (preço efetivo da transação).</p>
-    </footer>
+        // 1. Firebase Init
+        // Use a chave direta se a variável global não estiver definida, ou use __firebase_config do ambiente.
+        // Abaixo estou usando sua chave direta para garantir funcionamento.
+        const firebaseConfig = {
+            apiKey: "AIzaSyCg4BMiV6kHpuEmx-NMxnrDHgH6C-FfA8Y",
+            authDomain: "velt-pricing.firebaseapp.com",
+            projectId: "velt-pricing",
+            storageBucket: "velt-pricing.firebasestorage.app",
+            messagingSenderId: "199344187194",
+            appId: "1:199344187194:web:8eb2cdfb9a3c77257c9203"
+        };
 
-    <script>
-        // --- FUNÇÕES DE EXPORTAÇÃO ---
-        function exportPdf() {
-            // Sincroniza inputs visuais com o atributo 'value' para o PDF capturar
-            const inputs = document.querySelectorAll('input, select');
-            inputs.forEach(input => {
-                if (input.type === 'checkbox' || input.type === 'radio') {
-                    if (input.checked) input.setAttribute('checked', 'checked');
-                    else input.removeAttribute('checked');
-                } else if (input.tagName === 'SELECT') {
-                    const options = input.querySelectorAll('option');
-                    options.forEach(opt => {
-                        if (opt.selected) opt.setAttribute('selected', 'selected');
-                        else opt.removeAttribute('selected');
-                    });
-                } else {
-                    input.setAttribute('value', input.value);
-                }
-            });
-
-            const element = document.getElementById('calculator-content');
-            let fileName = document.getElementById('productName').value || "Calculo";
-            
-            // Limpa o nome do arquivo
-            fileName = fileName.trim().replace(/[^a-zA-Z0-9_\-\s]/g, "").replace(/\s+/g, "_");
-
-            const opt = {
-                margin:       [0.2, 0.2], // Margens menores para caber A4
-                filename:     `${fileName}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 }, // Alta resolução
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().set(opt).from(element).save();
-        }
-
-        // Função de Impressão Nativa (Secundária)
-        function printContent() {
-            const oldTitle = document.title;
-            const nameInput = document.getElementById('productName');
-            if (nameInput && nameInput.value.trim() !== "") {
-                document.title = nameInput.value.trim().replace(/\s+/g, "_");
-            }
-            window.print();
-            setTimeout(() => { document.title = oldTitle; }, 1000);
-        }
-
-        // --- GERENCIAMENTO DE ESTADO E PERSISTÊNCIA ---
-        let products = JSON.parse(localStorage.getItem('ml_products') || '[]');
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let userId = null;
+        let products = []; // Local mirror
         let currentEditingId = null;
+        const appId = 'velt-pricing'; // Forçando ID fixo para este contexto
 
-        // --- NAVEGAÇÃO DE ABAS ---
-        function switchTab(tabName) {
-            // Esconder todas as abas
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            
-            // Resetar botões (classes base)
-            const baseClass = "px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition";
-            const activeClass = "px-4 py-1 text-sm font-semibold rounded text-white bg-blue-600 transition";
-            
-            document.getElementById('btn-tab-calc').className = baseClass;
-            document.getElementById('btn-tab-products').className = baseClass;
-            document.getElementById('btn-tab-sim').className = baseClass;
-
-            if(tabName === 'calc') {
-                document.getElementById('tab-calc').classList.add('active');
-                document.getElementById('btn-tab-calc').className = activeClass;
-            } else if (tabName === 'sim') {
-                document.getElementById('tab-sim').classList.add('active');
-                document.getElementById('btn-tab-sim').className = activeClass;
+        // 2. Auth State Listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userId = user.uid;
+                document.getElementById('auth-container').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                loadProductsFromFirestore();
+                
+                // Inicializa a calculadora com valores padrão após login
+                updateCommissionPreset();
+                calculate();
             } else {
-                document.getElementById('tab-products').classList.add('active');
-                document.getElementById('btn-tab-products').className = activeClass;
-                renderProducts(); 
+                userId = null;
+                products = []; 
+                document.getElementById('auth-container').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('hidden');
+            }
+        });
+
+        // 3. Auth Functions (Global)
+        window.toggleAuthMode = function() {
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            if (loginForm.classList.contains('hidden')) {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+            } else {
+                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden');
+            }
+        };
+
+        function translateAuthError(code) {
+            switch (code) {
+                case 'auth/email-already-in-use': return "E-mail já cadastrado. Tente fazer login.";
+                case 'auth/invalid-email': return "E-mail inválido.";
+                case 'auth/operation-not-allowed': return "Método de login não ativado no Firebase Console.";
+                case 'auth/weak-password': return "A senha deve ter pelo menos 6 caracteres.";
+                case 'auth/user-not-found': return "Usuário não encontrado.";
+                case 'auth/wrong-password': return "Senha incorreta.";
+                case 'auth/invalid-credential': return "Credenciais inválidas.";
+                default: return "Erro desconhecido: " + code;
             }
         }
 
-        // --- BUSCA NO SIMULADOR ---
-        function searchSimProducts() {
-            const term = document.getElementById('simSearchInput').value.toUpperCase();
-            const resultsBox = document.getElementById('simSearchResults');
-            
-            if (term.length < 1) {
-                resultsBox.style.display = 'none';
-                return;
+        window.handleLogin = async function() {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            const errDiv = document.getElementById('loginError');
+            errDiv.classList.add('hidden');
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (error) {
+                errDiv.innerText = translateAuthError(error.code);
+                errDiv.classList.remove('hidden');
             }
+        };
 
-            const filtered = products.filter(p => 
-                p.name.toUpperCase().includes(term) || 
-                p.sku.toUpperCase().includes(term)
-            );
+        window.handleGuestLogin = async function() {
+            const errDiv = document.getElementById('loginError');
+            errDiv.classList.add('hidden');
+            try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                errDiv.innerText = translateAuthError(error.code);
+                errDiv.classList.remove('hidden');
+            }
+        }
 
-            if (filtered.length > 0) {
-                let html = '';
-                filtered.forEach(p => {
-                    html += `<div class="search-item" onclick="selectSimProduct('${p.id}')">
-                                <div class="font-bold text-gray-800">${p.name}</div>
-                                <div class="text-xs text-gray-500">SKU: ${p.sku} | Preço Por: ${p.results.pricePor}</div>
-                             </div>`;
+        window.handleRegister = async function() {
+            const email = document.getElementById('regEmail').value;
+            const pass = document.getElementById('regPass').value;
+            const errDiv = document.getElementById('regError');
+            errDiv.classList.add('hidden');
+
+            try {
+                await createUserWithEmailAndPassword(auth, email, pass);
+            } catch (error) {
+                errDiv.innerText = translateAuthError(error.code);
+                errDiv.classList.remove('hidden');
+            }
+        };
+
+        window.handleLogout = async function() {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Erro ao sair", error);
+            }
+        };
+
+        // 4. Data Loading
+        function loadProductsFromFirestore() {
+            if (!userId) return;
+            const q = query(collection(db, 'artifacts', appId, 'users', userId, 'products'));
+            onSnapshot(q, (snapshot) => {
+                products = [];
+                snapshot.forEach((doc) => {
+                    products.push({ id: doc.id, ...doc.data() });
                 });
-                resultsBox.innerHTML = html;
-                resultsBox.style.display = 'block';
-            } else {
-                resultsBox.innerHTML = '<div class="p-3 text-gray-500 text-sm">Nenhum produto encontrado.</div>';
-                resultsBox.style.display = 'block';
-            }
+                renderProducts();
+            }, (error) => {
+                console.error("Erro ao ler produtos:", error);
+            });
         }
 
-        function selectSimProduct(id) {
-            const p = products.find(prod => prod.id === id);
-            if (!p) return;
+        // --- CONSTANTS & HELPERS (Scoped to Module but used by Globals) ---
+        
+        const categoryRates = {
+            'padrao': { classic: 14.0, premium: 19.0, name: 'Outros / Padrão' },
+            'bermudas': { classic: 14.0, premium: 19.0, name: 'Bermudas e Shorts (Geral)' },
+            'blusas': { classic: 14.0, premium: 19.0, name: 'Blusas' },
+            'calcas': { classic: 14.0, premium: 19.0, name: 'Calças (Geral)' },
+            'camisas': { classic: 14.0, premium: 19.0, name: 'Camisas' },
+            'camisetas': { classic: 14.0, premium: 19.0, name: 'Camisetas e Regatas (Geral)' },
+            'kits': { classic: 14.0, premium: 19.0, name: 'Kits de Conjuntos' },
+            'fitness_calcas': { classic: 12.5, premium: 17.5, name: 'Calças e Joggings (Fitness)' },
+            'fitness_camisetas': { classic: 12.5, premium: 17.5, name: 'Camisetas e Regatas (Fitness)' },
+            'fitness_conjuntos': { classic: 12.5, premium: 17.5, name: 'Conjuntos (Fitness)' },
+            'fitness_leggings': { classic: 12.5, premium: 17.5, name: 'Leggings (Geral/Fitness)' },
+            'fitness_shorts': { classic: 12.5, premium: 17.5, name: 'Shorts e Bermudas (Fitness)' },
+            'fitness_tops': { classic: 12.5, premium: 17.5, name: 'Tops de Fitness' }
+        };
 
-            // Carrega dados na memória da Calculadora Principal (para a simulação usar)
-            document.getElementById('costProduction').value = p.costs.production;
-            document.getElementById('costPackaging').value = p.costs.packaging;
-            document.getElementById('costOverhead').value = p.costs.overhead;
-            document.getElementById('costMisc').value = p.costs.misc;
+        const shippingTables = {
+            'range_79_99': { 'up_300': 11.97, 'up_500': 12.87, 'up_1kg': 13.47, 'up_2kg': 14.07 },
+            'range_100_119': { 'up_300': 13.97, 'up_500': 15.02, 'up_1kg': 15.72, 'up_2kg': 16.42 },
+            'range_120_149': { 'up_300': 15.96, 'up_500': 17.16, 'up_1kg': 17.96, 'up_2kg': 18.76 },
+            'range_150_199': { 'up_300': 17.96, 'up_500': 19.31, 'up_1kg': 20.21, 'up_2kg': 21.11 },
+            'range_200_plus': { 'up_300': 19.95, 'up_500': 21.45, 'up_1kg': 22.45, 'up_2kg': 23.45 }
+        };
+
+        function getOfficialShippingCost(price, weightClass) {
+            if (weightClass === 'custom') return parseFloat(document.getElementById('shippingCostUser').value) || 0;
+            if (price < 79) return 0; 
             
-            document.getElementById('feePercent').value = p.config.fee;
-            document.getElementById('taxRate').value = p.config.tax;
-            document.getElementById('adsAcos').value = p.config.ads;
-            document.getElementById('returnRate').value = p.config.returnRate;
-            document.getElementById('returnUnitCost').value = p.config.returnCost;
-            document.getElementById('weightClass').value = p.config.weight;
+            let table = null;
+            if (price >= 79 && price < 100) table = shippingTables['range_79_99'];
+            else if (price >= 100 && price < 120) table = shippingTables['range_100_119'];
+            else if (price >= 120 && price < 150) table = shippingTables['range_120_149'];
+            else if (price >= 150 && price < 200) table = shippingTables['range_150_199'];
+            else if (price >= 200) table = shippingTables['range_200_plus'];
 
-            // Configura UI do Simulador
-            document.getElementById('simSearchResults').style.display = 'none';
-            document.getElementById('simSearchInput').value = "";
-            document.getElementById('simLoadedProduct').classList.remove('hidden');
-            document.getElementById('simLoadedName').innerText = p.name;
-
-            // Define Preços Iniciais
-            // Extrai valor numérico da string formatada "R$ 49,90" -> 49.90
-            let sellingPrice = parseFloat(p.results.pricePor.replace('R$', '').replace('.', '').replace(',', '.'));
-            let promoRate = parseFloat(p.config.promo) / 100;
-            
-            // Calcula o "Preço De" original baseado na promoção salva
-            let listPrice = sellingPrice;
-            if (promoRate < 1) {
-                listPrice = sellingPrice / (1 - promoRate);
+            if (table && table[weightClass]) {
+                return table[weightClass];
             }
-
-            document.getElementById('simListPriceInput').value = listPrice.toFixed(2);
-            document.getElementById('simPriceInput').value = sellingPrice.toFixed(2);
-
-            // Roda simulação inicial
-            calculateSimulation();
+            return 0; 
         }
 
-        // --- SIMULADOR DE LUCRO ---
-        function calculateSimulation() {
-            const simPrice = parseFloat(document.getElementById('simPriceInput').value);
-            const simListPrice = parseFloat(document.getElementById('simListPriceInput').value) || 0;
+        // --- GLOBAL FUNCTIONS EXPORT ---
 
-            if (!simPrice || simPrice <= 0) {
-                // Limpa se vazio
-                return;
-            }
-
-            // 1. Coleta dados globais da aba Calculadora
-            const v_prod = parseFloat(document.getElementById('costProduction').value) || 0;
-            const v_pack = parseFloat(document.getElementById('costPackaging').value) || 0;
-            const v_over = parseFloat(document.getElementById('costOverhead').value) || 0;
-            const v_misc = parseFloat(document.getElementById('costMisc').value) || 0;
-            
-            const fee_pct = (parseFloat(document.getElementById('feePercent').value) || 0) / 100;
-            const tax_pct = (parseFloat(document.getElementById('taxRate').value) || 0) / 100;
-            const ads_pct = (parseFloat(document.getElementById('adsAcos').value) || 0) / 100;
-            
-            const ret_rate = (parseFloat(document.getElementById('returnRate').value) || 0) / 100;
-            const ret_cost = parseFloat(document.getElementById('returnUnitCost').value) || 0;
-            const weightClass = document.getElementById('weightClass').value;
-
-            // 2. Cálculos de Custos Fixos
-            const V = v_prod + v_pack + v_over + v_misc;
-            const R = ret_rate * ret_cost;
-
-            // 3. Lógica de Frete e Taxa Fixa (Baseada no Preço Simulado)
-            let simShipping = 0;
-            let simFixedFee = 0;
-
-            if (simPrice < 79) {
-                // Frete Grátis (Vendedor não paga)
-                simShipping = 0;
-                // Taxa Fixa
-                if (simPrice < 12.50) simFixedFee = simPrice * 0.5;
-                else if (simPrice < 29) simFixedFee = 6.25;
-                else if (simPrice < 50) simFixedFee = 6.50;
-                else simFixedFee = 6.75;
-            } else {
-                // Vendedor Paga Frete
-                simShipping = getOfficialShippingCost(simPrice, weightClass);
-                simFixedFee = 0;
-            }
-
-            // 4. Cálculos Percentuais
-            const simCommission = simPrice * fee_pct;
-            const simTax = simPrice * tax_pct;
-            const simAds = simPrice * ads_pct;
-
-            // 5. Resultado Final
-            const totalCosts = V + R + simCommission + simFixedFee + simShipping + simTax + simAds;
-            const simProfit = simPrice - totalCosts;
-            const simMargin = (simProfit / simPrice) * 100;
-
-            // 6. Cálculo de Desconto Dinâmico
-            let discountPct = 0;
-            if (simListPrice > 0) {
-                discountPct = ((simListPrice - simPrice) / simListPrice) * 100;
-            }
-
-            // 7. Atualizar UI do Simulador
-            const fmt = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            
-            document.getElementById('simProfitVal').innerText = fmt(simProfit);
-            document.getElementById('simProfitVal').className = simProfit >= 0 ? "text-4xl font-bold text-green-600 mt-2" : "text-4xl font-bold text-red-600 mt-2";
-            
-            document.getElementById('simMarginVal').innerText = simMargin.toFixed(2) + "%";
-            document.getElementById('simMarginVal').className = simMargin >= 0 ? "text-4xl font-bold text-blue-600 mt-2" : "text-4xl font-bold text-red-600 mt-2";
-
-            // Atualiza Display de Desconto
-            const discEl = document.getElementById('simDiscountDisplay');
-            discEl.innerText = discountPct.toFixed(1) + "%";
-            if(discountPct > 0) discEl.className = "font-bold text-xl text-purple-600";
-            else discEl.className = "font-bold text-xl text-gray-400";
-
-            // Tabela DRE Simulação
-            let dreHtml = `
-                <tr class="font-bold text-base bg-gray-50">
-                    <td class="py-2 text-gray-800">(=) Preço Venda Simulado</td>
-                    <td class="py-2 text-right text-blue-700">${fmt(simPrice)}</td>
-                </tr>
-                <tr class="text-red-500"><td class="py-2 pl-2 border-l-2 border-red-200">(-) Comissão ML</td><td class="py-2 text-right">- ${fmt(simCommission)}</td></tr>
-                <tr class="text-red-600 bg-red-50"><td class="py-2 pl-2 border-l-2 border-red-300">(-) Taxa Fixa</td><td class="py-2 text-right">- ${fmt(simFixedFee)}</td></tr>
-                <tr class="text-red-500"><td class="py-2 pl-2 border-l-2 border-red-200">(-) Frete</td><td class="py-2 text-right">- ${fmt(simShipping)}</td></tr>
-                <tr class="text-orange-500"><td class="py-2 pl-2 border-l-2 border-orange-200">(-) Impostos</td><td class="py-2 text-right">- ${fmt(simTax)}</td></tr>
-                <tr class="text-orange-500"><td class="py-2 pl-2 border-l-2 border-orange-200">(-) Ads</td><td class="py-2 text-right">- ${fmt(simAds)}</td></tr>
-                <tr class="text-gray-500"><td class="py-2 pl-2 border-l-2 border-gray-200">(-) Custos Prod. + Devol.</td><td class="py-2 text-right">- ${fmt(V + R)}</td></tr>
-                <tr class="${simProfit >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} font-bold text-base">
-                    <td class="py-3 pl-2 rounded-l">(=) Lucro Líquido</td>
-                    <td class="py-3 text-right rounded-r">${fmt(simProfit)}</td>
-                </tr>
-            `;
-            document.getElementById('simDRETable').innerHTML = dreHtml;
-        }
-
-        // --- SALVAR PRODUTO ---
-        function saveProduct() {
+        window.saveProduct = async function() {
             const name = document.getElementById('productName').value.trim();
             const sku = document.getElementById('productSku').value.trim();
 
@@ -804,9 +831,7 @@
                 return;
             }
 
-            // Coletar dados do form
             const productData = {
-                id: currentEditingId || Date.now().toString(), // ID novo ou existente
                 name: name,
                 sku: sku,
                 category: document.getElementById('categorySelect').value,
@@ -831,37 +856,79 @@
                 results: {
                     pricePor: document.getElementById('displayPromoPrice').innerText,
                     margin: document.getElementById('displayNetMargin').innerText
-                }
+                },
+                updatedAt: new Date().toISOString()
             };
 
-            // Atualizar ou Criar Novo
-            if (currentEditingId) {
-                const index = products.findIndex(p => p.id === currentEditingId);
-                if (index !== -1) products[index] = productData;
-            } else {
-                products.push(productData);
+            try {
+                if (currentEditingId) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'products', currentEditingId), productData);
+                    alert(`Produto "${name}" atualizado com sucesso!`);
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'products'), productData);
+                    alert(`Produto "${name}" salvo na nuvem com sucesso!`);
+                }
+                currentEditingId = null;
+                document.getElementById('productId').value = "";
+            } catch (e) {
+                console.error("Erro ao salvar:", e);
+                alert("Erro ao salvar produto. Tente novamente.");
             }
+        };
 
-            // Salvar no LocalStorage
-            localStorage.setItem('ml_products', JSON.stringify(products));
-            
-            // Resetar estado de edição
-            currentEditingId = null;
-            document.getElementById('productId').value = "";
-            
-            alert(`Produto "${name}" salvo com sucesso!`);
-            renderProducts(); // Atualiza tabela em background
-        }
+        window.deleteProduct = async function(id) {
+            if(confirm("Tem certeza que deseja excluir este produto da nuvem?")) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'products', id));
+                    if(currentEditingId === id) {
+                        currentEditingId = null;
+                        document.getElementById('productId').value = "";
+                    }
+                } catch (e) {
+                    console.error("Erro ao deletar:", e);
+                    alert("Erro ao excluir.");
+                }
+            }
+        };
 
-        // --- RENDERIZAR TABELA ---
-        function renderProducts() {
+        window.editProduct = function(id) {
+            const p = products.find(prod => prod.id === id);
+            if (!p) return;
+
+            document.getElementById('productName').value = p.name;
+            document.getElementById('productSku').value = p.sku;
+            document.getElementById('categorySelect').value = p.category;
+            document.getElementById('listingType').value = p.type;
+            
+            document.getElementById('costProduction').value = p.costs.production;
+            document.getElementById('costPackaging').value = p.costs.packaging;
+            document.getElementById('costOverhead').value = p.costs.overhead;
+            document.getElementById('costMisc').value = p.costs.misc;
+            
+            document.getElementById('feePercent').value = p.config.fee;
+            document.getElementById('taxRate').value = p.config.tax;
+            document.getElementById('targetMargin').value = p.config.margin;
+            document.getElementById('adsAcos').value = p.config.ads;
+            document.getElementById('promoRate').value = p.config.promo;
+            document.getElementById('returnRate').value = p.config.returnRate;
+            document.getElementById('returnUnitCost').value = p.config.returnCost;
+            document.getElementById('weightClass').value = p.config.weight;
+
+            currentEditingId = p.id;
+            
+            switchTab('calc');
+            updateCommissionPreset(); 
+            calculate(); 
+        };
+
+        window.renderProducts = function() {
             const tbody = document.getElementById('productsTableBody');
+            if(!tbody) return;
             const searchTerm = document.getElementById('searchProduct').value.toUpperCase();
             
-            // Filtrar
             const filtered = products.filter(p => 
                 p.name.toUpperCase().includes(searchTerm) || 
-                p.sku.toUpperCase().includes(searchTerm)
+                (p.sku && p.sku.toUpperCase().includes(searchTerm))
             );
 
             if (filtered.length === 0) {
@@ -889,90 +956,76 @@
                 `;
             });
             tbody.innerHTML = html;
-        }
+        };
 
-        function filterProducts() {
+        window.filterProducts = function() {
             renderProducts();
-        }
+        };
 
-        // --- EDITAR PRODUTO ---
-        function editProduct(id) {
+        window.searchSimProducts = function() {
+            const term = document.getElementById('simSearchInput').value.toUpperCase();
+            const resultsBox = document.getElementById('simSearchResults');
+            
+            if (term.length < 1) {
+                resultsBox.style.display = 'none';
+                return;
+            }
+
+            const filtered = products.filter(p => 
+                p.name.toUpperCase().includes(term) || 
+                (p.sku && p.sku.toUpperCase().includes(term))
+            );
+
+            if (filtered.length > 0) {
+                let html = '';
+                filtered.forEach(p => {
+                    html += `<div class="search-item" onclick="selectSimProduct('${p.id}')">
+                                <div class="font-bold text-gray-800">${p.name}</div>
+                                <div class="text-xs text-gray-500">SKU: ${p.sku} | Preço Por: ${p.results.pricePor}</div>
+                             </div>`;
+                });
+                resultsBox.innerHTML = html;
+                resultsBox.style.display = 'block';
+            } else {
+                resultsBox.innerHTML = '<div class="p-3 text-gray-500 text-sm">Nenhum produto encontrado.</div>';
+                resultsBox.style.display = 'block';
+            }
+        };
+
+        window.selectSimProduct = function(id) {
             const p = products.find(prod => prod.id === id);
             if (!p) return;
 
-            // Preencher campos
-            document.getElementById('productName').value = p.name;
-            document.getElementById('productSku').value = p.sku;
-            document.getElementById('categorySelect').value = p.category;
-            document.getElementById('listingType').value = p.type;
-            
             document.getElementById('costProduction').value = p.costs.production;
             document.getElementById('costPackaging').value = p.costs.packaging;
             document.getElementById('costOverhead').value = p.costs.overhead;
             document.getElementById('costMisc').value = p.costs.misc;
-            
             document.getElementById('feePercent').value = p.config.fee;
             document.getElementById('taxRate').value = p.config.tax;
-            document.getElementById('targetMargin').value = p.config.margin;
             document.getElementById('adsAcos').value = p.config.ads;
-            document.getElementById('promoRate').value = p.config.promo;
             document.getElementById('returnRate').value = p.config.returnRate;
             document.getElementById('returnUnitCost').value = p.config.returnCost;
             document.getElementById('weightClass').value = p.config.weight;
 
-            // Setar ID de edição
-            currentEditingId = p.id;
-            
-            // Trocar aba e recalcular
-            switchTab('calc');
-            updateCommissionPreset(); // Atualiza label
-            calculate(); // Refaz contas
-        }
+            document.getElementById('simSearchResults').style.display = 'none';
+            document.getElementById('simSearchInput').value = "";
+            document.getElementById('simLoadedProduct').classList.remove('hidden');
+            document.getElementById('simLoadedName').innerText = p.name;
 
-        // --- EXCLUIR PRODUTO ---
-        function deleteProduct(id) {
-            if(confirm("Tem certeza que deseja excluir este produto?")) {
-                products = products.filter(p => p.id !== id);
-                localStorage.setItem('ml_products', JSON.stringify(products));
-                renderProducts();
-                
-                // Se estava editando este produto, limpa o ID
-                if(currentEditingId === id) currentEditingId = null;
+            let sellingPrice = parseFloat(p.results.pricePor.replace('R$', '').replace('.', '').replace(',', '.'));
+            let promoRate = parseFloat(p.config.promo) / 100;
+            let listPrice = sellingPrice;
+            if (promoRate < 1) {
+                listPrice = sellingPrice / (1 - promoRate);
             }
-        }
 
-        // --- FORMATAÇÃO TEXTO ---
-        function formatProductName(input) {
-            let value = input.value;
-            let formatted = value.replace(/\s+/g, '_').replace(/_+/g, '_'); 
-            formatted = formatted.replace(/(^|_)([a-z])/g, (match) => match.toUpperCase());
-            input.value = formatted;
-        }
+            document.getElementById('simListPriceInput').value = listPrice.toFixed(2);
+            document.getElementById('simPriceInput').value = sellingPrice.toFixed(2);
 
-        function formatSku(input) {
-            let value = input.value;
-            let formatted = value.toUpperCase().replace(/\s+/g, '-');
-            input.value = formatted;
-        }
-
-        // --- DADOS DE CATEGORIAS ---
-        const categoryRates = {
-            'padrao': { classic: 14.0, premium: 19.0, name: 'Outros / Padrão' },
-            'bermudas': { classic: 14.0, premium: 19.0, name: 'Bermudas e Shorts (Geral)' },
-            'blusas': { classic: 14.0, premium: 19.0, name: 'Blusas' },
-            'calcas': { classic: 14.0, premium: 19.0, name: 'Calças (Geral)' },
-            'camisas': { classic: 14.0, premium: 19.0, name: 'Camisas' },
-            'camisetas': { classic: 14.0, premium: 19.0, name: 'Camisetas e Regatas (Geral)' },
-            'kits': { classic: 14.0, premium: 19.0, name: 'Kits de Conjuntos' },
-            'fitness_calcas': { classic: 12.5, premium: 17.5, name: 'Calças e Joggings (Fitness)' },
-            'fitness_camisetas': { classic: 12.5, premium: 17.5, name: 'Camisetas e Regatas (Fitness)' },
-            'fitness_conjuntos': { classic: 12.5, premium: 17.5, name: 'Conjuntos (Fitness)' },
-            'fitness_leggings': { classic: 12.5, premium: 17.5, name: 'Leggings (Geral/Fitness)' },
-            'fitness_shorts': { classic: 12.5, premium: 17.5, name: 'Shorts e Bermudas (Fitness)' },
-            'fitness_tops': { classic: 12.5, premium: 17.5, name: 'Tops de Fitness' }
+            calculateSimulation();
         };
 
-        function updateCommissionPreset() {
+        window.updateCommissionPreset = function() {
             const type = document.getElementById('listingType').value;
             const categoryKey = document.getElementById('categorySelect').value;
             const feeInput = document.getElementById('feePercent');
@@ -983,46 +1036,255 @@
             
             feeInput.value = newRate.toFixed(2);
             note.innerHTML = `<i class="fa-solid fa-check-circle"></i> Aplicado taxas de <strong>${rates.name}</strong>: Clássico ${rates.classic}% / Premium ${rates.premium}%`;
-            
-            if (rates.classic < 14.0) {
-                note.className = "text-xs text-green-600 mt-1 font-bold";
-            } else {
-                note.className = "text-xs text-yellow-700 mt-1";
-            }
-        }
-
-        // --- TABELA OFICIAL DE FRETE 2026 ---
-        const shippingTables = {
-            'range_79_99': { 'up_300': 11.97, 'up_500': 12.87, 'up_1kg': 13.47, 'up_2kg': 14.07 },
-            'range_100_119': { 'up_300': 13.97, 'up_500': 15.02, 'up_1kg': 15.72, 'up_2kg': 16.42 },
-            'range_120_149': { 'up_300': 15.96, 'up_500': 17.16, 'up_1kg': 17.96, 'up_2kg': 18.76 },
-            'range_150_199': { 'up_300': 17.96, 'up_500': 19.31, 'up_1kg': 20.21, 'up_2kg': 21.11 },
-            'range_200_plus': { 'up_300': 19.95, 'up_500': 21.45, 'up_1kg': 22.45, 'up_2kg': 23.45 }
+            if (rates.classic < 14.0) note.className = "text-xs text-green-600 mt-1 font-bold";
+            else note.className = "text-xs text-yellow-700 mt-1";
         };
 
-        function getOfficialShippingCost(price, weightClass) {
-            if (weightClass === 'custom') return parseFloat(document.getElementById('shippingCostUser').value) || 0;
-            if (price < 79) return 0; 
-            
-            let table = null;
-            if (price >= 79 && price < 100) table = shippingTables['range_79_99'];
-            else if (price >= 100 && price < 120) table = shippingTables['range_100_119'];
-            else if (price >= 120 && price < 150) table = shippingTables['range_120_149'];
-            else if (price >= 150 && price < 200) table = shippingTables['range_150_199'];
-            else if (price >= 200) table = shippingTables['range_200_plus'];
+        window.calculate = function() {
+            const v_prod = parseFloat(document.getElementById('costProduction').value) || 0;
+            const v_pack = parseFloat(document.getElementById('costPackaging').value) || 0;
+            const v_over = parseFloat(document.getElementById('costOverhead').value) || 0;
+            const v_misc = parseFloat(document.getElementById('costMisc').value) || 0;
+            const fee_pct = (parseFloat(document.getElementById('feePercent').value) || 0) / 100;
+            const tax_pct = (parseFloat(document.getElementById('taxRate').value) || 0) / 100;
+            const ads_pct = (parseFloat(document.getElementById('adsAcos').value) || 0) / 100;
+            const margin_pct = (parseFloat(document.getElementById('targetMargin').value) || 0) / 100;
+            const promo_pct = (parseFloat(document.getElementById('promoRate').value) || 0) / 100;
+            const ret_rate = (parseFloat(document.getElementById('returnRate').value) || 0) / 100;
+            const ret_cost = parseFloat(document.getElementById('returnUnitCost').value) || 0;
+            const weightClass = document.getElementById('weightClass').value;
 
-            if (table && table[weightClass]) {
-                return table[weightClass];
+            const V = v_prod + v_pack + v_over + v_misc;
+            const R = ret_rate * ret_cost;
+            const denominator = 1 - (fee_pct + tax_pct + ads_pct + margin_pct);
+
+            const bands = [
+                { min: 200, max: 99999, fixed: 0, text: "Preço > 200: Tabela Frete Completa" },
+                { min: 150, max: 199.99, fixed: 0, text: "Preço 150-199: Tabela Frete 150-199" },
+                { min: 120, max: 149.99, fixed: 0, text: "Preço 120-149: Tabela Frete 120-149" },
+                { min: 100, max: 119.99, fixed: 0, text: "Preço 100-119: Tabela Frete 100-119" },
+                { min: 79, max: 99.99, fixed: 0, text: "Preço 79-99: Tabela Frete 79-99" },
+                { min: 50, max: 78.99, fixed: 6.75, text: "Preço 50-79: Taxa Fixa R$ 6,75" }, 
+                { min: 29, max: 49.99, fixed: 6.50, text: "Preço 29-50: Taxa Fixa R$ 6,50" }, 
+                { min: 12.50, max: 28.99, fixed: 6.25, text: "Preço 12,50-29: Taxa Fixa R$ 6,25" },
+                { min: 0, max: 12.49, type: 'half_price', text: "Preço < 12,50: Taxa Fixa 50%" }
+            ];
+
+            let finalSellingPrice = 0; 
+            let finalFixedFee = 0;
+            let finalShipping = 0;
+            let found = false;
+            let activeRuleText = "";
+
+            for (let band of bands) {
+                let estimatedShipping = 0;
+                if (band.min >= 79) estimatedShipping = getOfficialShippingCost(band.min, weightClass);
+
+                let currentDenominator = denominator;
+                let currentFixed = band.fixed || 0;
+
+                if (band.type === 'half_price') currentDenominator = denominator - 0.5; 
+
+                if (currentDenominator <= 0) continue; 
+
+                let P_sell_candidate = (V + R + estimatedShipping + currentFixed) / currentDenominator;
+
+                let intPart = Math.floor(P_sell_candidate);
+                let decPart = P_sell_candidate - intPart;
+                if (decPart <= 0.90001) P_sell_candidate = intPart + 0.90;
+                else P_sell_candidate = intPart + 0.99;
+
+                if (P_sell_candidate >= band.min && P_sell_candidate <= band.max) {
+                    finalSellingPrice = P_sell_candidate;
+                    finalShipping = estimatedShipping;
+                    activeRuleText = band.text;
+                    if (band.type === 'half_price') finalFixedFee = finalSellingPrice * 0.5; 
+                    else finalFixedFee = band.fixed;
+                    found = true;
+                    break;
+                }
             }
-            return 0; 
-        }
 
-        // --- GERAÇÃO DE ESTRATÉGIAS ---
+            if (!found) {
+                if (denominator > 0) {
+                     let estimatedShipping = getOfficialShippingCost(200, weightClass); 
+                     let rawPrice = (V + R + estimatedShipping + 0) / denominator;
+                     let intPart = Math.floor(rawPrice);
+                     if (rawPrice - intPart <= 0.90001) finalSellingPrice = intPart + 0.90; else finalSellingPrice = intPart + 0.99;
+                     finalShipping = estimatedShipping;
+                     finalFixedFee = 0;
+                     activeRuleText = "Fallback (Preço Alto)";
+                }
+            }
+
+            let finalListPrice = finalSellingPrice;
+            if (promo_pct < 1) finalListPrice = finalSellingPrice / (1 - promo_pct);
+
+            const valCommission = finalSellingPrice * fee_pct;
+            const valTax = finalSellingPrice * tax_pct;
+            const valAds = finalSellingPrice * ads_pct;
+            const valPromoDiscount = finalListPrice - finalSellingPrice; 
+            const valTotalCosts = V + R;
+            const netProfit = finalSellingPrice - (valCommission + finalFixedFee) - finalShipping - valTax - valAds - valTotalCosts;
+            const realMargin = (netProfit / finalSellingPrice) * 100;
+
+            if (weightClass !== 'custom') {
+                document.getElementById('shippingCostUser').value = finalShipping.toFixed(2);
+            }
+
+            updateUI(finalListPrice, finalSellingPrice, valPromoDiscount, netProfit, realMargin, valCommission, finalFixedFee, finalShipping, valTax, valAds, valTotalCosts, R, promo_pct, activeRuleText, weightClass);
+        };
+
+        window.calculateSimulation = function() {
+            const simPrice = parseFloat(document.getElementById('simPriceInput').value);
+            const simListPrice = parseFloat(document.getElementById('simListPriceInput').value) || 0;
+
+            if (!simPrice || simPrice <= 0) return;
+
+            const v_prod = parseFloat(document.getElementById('costProduction').value) || 0;
+            const v_pack = parseFloat(document.getElementById('costPackaging').value) || 0;
+            const v_over = parseFloat(document.getElementById('costOverhead').value) || 0;
+            const v_misc = parseFloat(document.getElementById('costMisc').value) || 0;
+            const fee_pct = (parseFloat(document.getElementById('feePercent').value) || 0) / 100;
+            const tax_pct = (parseFloat(document.getElementById('taxRate').value) || 0) / 100;
+            const ads_pct = (parseFloat(document.getElementById('adsAcos').value) || 0) / 100;
+            const ret_rate = (parseFloat(document.getElementById('returnRate').value) || 0) / 100;
+            const ret_cost = parseFloat(document.getElementById('returnUnitCost').value) || 0;
+            const weightClass = document.getElementById('weightClass').value;
+
+            const V = v_prod + v_pack + v_over + v_misc;
+            const R = ret_rate * ret_cost;
+
+            let simShipping = 0;
+            let simFixedFee = 0;
+
+            if (simPrice < 79) {
+                simShipping = 0;
+                if (simPrice < 12.50) simFixedFee = simPrice * 0.5;
+                else if (simPrice < 29) simFixedFee = 6.25;
+                else if (simPrice < 50) simFixedFee = 6.50;
+                else simFixedFee = 6.75;
+            } else {
+                simShipping = getOfficialShippingCost(simPrice, weightClass);
+                simFixedFee = 0;
+            }
+
+            const simCommission = simPrice * fee_pct;
+            const simTax = simPrice * tax_pct;
+            const simAds = simPrice * ads_pct;
+            const totalCosts = V + R + simCommission + simFixedFee + simShipping + simTax + simAds;
+            const simProfit = simPrice - totalCosts;
+            const simMargin = (simProfit / simPrice) * 100;
+
+            const fmt = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            document.getElementById('simProfitVal').innerText = fmt(simProfit);
+            document.getElementById('simProfitVal').className = simProfit >= 0 ? "text-4xl font-bold text-green-600 mt-2" : "text-4xl font-bold text-red-600 mt-2";
+            document.getElementById('simMarginVal').innerText = simMargin.toFixed(2) + "%";
+            document.getElementById('simMarginVal').className = simMargin >= 0 ? "text-4xl font-bold text-blue-600 mt-2" : "text-4xl font-bold text-red-600 mt-2";
+
+            let discountPct = 0;
+            if (simListPrice > 0) discountPct = ((simListPrice - simPrice) / simListPrice) * 100;
+            const discEl = document.getElementById('simDiscountDisplay');
+            discEl.innerText = discountPct.toFixed(1) + "%";
+            if(discountPct > 0) discEl.className = "font-bold text-xl text-purple-600";
+            else discEl.className = "font-bold text-xl text-gray-400";
+
+            let dreHtml = `
+                <tr class="font-bold text-base bg-gray-50">
+                    <td class="py-2 text-gray-800">(=) Preço Venda Simulado</td>
+                    <td class="py-2 text-right text-blue-700">${fmt(simPrice)}</td>
+                </tr>
+                <tr class="text-red-500"><td class="py-2 pl-2 border-l-2 border-red-200">(-) Comissão ML</td><td class="py-2 text-right">- ${fmt(simCommission)}</td></tr>
+                <tr class="text-red-600 bg-red-50"><td class="py-2 pl-2 border-l-2 border-red-300">(-) Taxa Fixa</td><td class="py-2 text-right">- ${fmt(simFixedFee)}</td></tr>
+                <tr class="text-red-500"><td class="py-2 pl-2 border-l-2 border-red-200">(-) Frete</td><td class="py-2 text-right">- ${fmt(simShipping)}</td></tr>
+                <tr class="text-orange-500"><td class="py-2 pl-2 border-l-2 border-orange-200">(-) Impostos</td><td class="py-2 text-right">- ${fmt(simTax)}</td></tr>
+                <tr class="text-orange-500"><td class="py-2 pl-2 border-l-2 border-orange-200">(-) Ads</td><td class="py-2 text-right">- ${fmt(simAds)}</td></tr>
+                <tr class="text-gray-500"><td class="py-2 pl-2 border-l-2 border-gray-200">(-) Custos Prod. + Devol.</td><td class="py-2 text-right">- ${fmt(V + R)}</td></tr>
+                <tr class="${simProfit >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} font-bold text-base">
+                    <td class="py-3 pl-2 rounded-l">(=) Lucro Líquido</td>
+                    <td class="py-3 text-right rounded-r">${fmt(simProfit)}</td>
+                </tr>
+            `;
+            document.getElementById('simDRETable').innerHTML = dreHtml;
+        };
+
+        // --- GLOBAL INITIALIZATION ---
+        window.formatProductName = function(input) {
+            let value = input.value;
+            let formatted = value.replace(/\s+/g, '_').replace(/_+/g, '_'); 
+            formatted = formatted.replace(/(^|_)([a-z])/g, (match) => match.toUpperCase());
+            input.value = formatted;
+        };
+
+        window.formatSku = function(input) {
+            let value = input.value;
+            let formatted = value.toUpperCase().replace(/\s+/g, '-');
+            input.value = formatted;
+        };
+
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            
+            const baseClass = "px-4 py-1 text-sm font-semibold rounded text-gray-300 hover:text-white hover:bg-blue-800 transition";
+            const activeClass = "px-4 py-1 text-sm font-semibold rounded text-white bg-blue-600 transition";
+            
+            document.getElementById('btn-tab-calc').className = baseClass;
+            document.getElementById('btn-tab-products').className = baseClass;
+            document.getElementById('btn-tab-sim').className = baseClass;
+
+            if(tabName === 'calc') {
+                document.getElementById('tab-calc').classList.add('active');
+                document.getElementById('btn-tab-calc').className = activeClass;
+            } else if (tabName === 'sim') {
+                document.getElementById('tab-sim').classList.add('active');
+                document.getElementById('btn-tab-sim').className = activeClass;
+            } else {
+                document.getElementById('tab-products').classList.add('active');
+                document.getElementById('btn-tab-products').className = activeClass;
+                renderProducts(); // Uses globally defined renderProducts
+            }
+        };
+
+        // --- Export & Print ---
+        window.exportPdf = function() {
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    if (input.checked) input.setAttribute('checked', 'checked'); else input.removeAttribute('checked');
+                } else if (input.tagName === 'SELECT') {
+                    const options = input.querySelectorAll('option');
+                    options.forEach(opt => {
+                        if (opt.selected) opt.setAttribute('selected', 'selected'); else opt.removeAttribute('selected');
+                    });
+                } else {
+                    input.setAttribute('value', input.value);
+                }
+            });
+            const element = document.getElementById('calculator-content');
+            let fileName = document.getElementById('productName').value || "Calculo";
+            fileName = fileName.trim().replace(/[^a-zA-Z0-9_\-\s]/g, "").replace(/\s+/g, "_");
+            const opt = {
+                margin: [0.2, 0.2], filename: `${fileName}.pdf`, image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        };
+
+        window.printContent = function() {
+            const oldTitle = document.title;
+            const nameInput = document.getElementById('productName');
+            if (nameInput && nameInput.value.trim() !== "") {
+                document.title = nameInput.value.trim().replace(/\s+/g, "_");
+            }
+            window.print();
+            setTimeout(() => { document.title = oldTitle; }, 1000);
+        };
+
+        // UI Update Function
         function updateStrategyPanel(price, margin, weightClass) {
             const panel = document.getElementById('strategyContent');
             let html = '';
-
-            // 1. ZONA DE PERIGO (R$ 79 - R$ 90)
             if (price >= 79 && price <= 90) {
                 html += `
                     <div class="strategy-card strategy-warning">
@@ -1041,8 +1303,6 @@
                     </div>
                 `;
             }
-
-            // 2. KITS E TICKET BAIXO
             if (price < 30) {
                 html += `
                     <div class="strategy-card strategy-info">
@@ -1053,8 +1313,6 @@
                     </div>
                 `;
             }
-
-            // 3. PREÇO PSICOLÓGICO (Já aplicado automaticamente, mas reforçamos)
             let decimal = price - Math.floor(price);
             html += `
                 <div class="strategy-card border-l-4 border-purple-500 bg-purple-50 mb-3 p-4 rounded shadow-sm text-sm">
@@ -1063,8 +1321,6 @@
                     <p class="text-xs text-gray-600">Finais .90 ou .99 aumentam a conversão.</p>
                 </div>
             `;
-
-            // 4. OFERTA DE/POR
             html += `
                 <div class="strategy-card border-l-4 border-gray-500 bg-gray-50 mb-3 p-4 rounded shadow-sm text-sm">
                     <h4 class="font-bold text-gray-700"><i class="fa-solid fa-tags"></i> Ative a Tag "OFERTA"</h4>
@@ -1072,144 +1328,7 @@
                     <p class="text-xs text-gray-600">O algoritmo do ML prioriza anúncios com descontos reais e recentes.</p>
                 </div>
             `;
-
             panel.innerHTML = html;
-        }
-
-        // --- LÓGICA CORE (PREÇO POR) ---
-        function calculate() {
-            // 1. Coleta
-            const v_prod = parseFloat(document.getElementById('costProduction').value) || 0;
-            const v_pack = parseFloat(document.getElementById('costPackaging').value) || 0;
-            const v_over = parseFloat(document.getElementById('costOverhead').value) || 0;
-            const v_misc = parseFloat(document.getElementById('costMisc').value) || 0;
-            
-            const fee_pct = (parseFloat(document.getElementById('feePercent').value) || 0) / 100;
-            const tax_pct = (parseFloat(document.getElementById('taxRate').value) || 0) / 100;
-            const ads_pct = (parseFloat(document.getElementById('adsAcos').value) || 0) / 100;
-            const margin_pct = (parseFloat(document.getElementById('targetMargin').value) || 0) / 100;
-            const promo_pct = (parseFloat(document.getElementById('promoRate').value) || 0) / 100;
-            
-            const ret_rate = (parseFloat(document.getElementById('returnRate').value) || 0) / 100;
-            const ret_cost = parseFloat(document.getElementById('returnUnitCost').value) || 0;
-            
-            const weightClass = document.getElementById('weightClass').value;
-
-            const V = v_prod + v_pack + v_over + v_misc;
-            const R = ret_rate * ret_cost;
-            
-            const denominator = 1 - (fee_pct + tax_pct + ads_pct + margin_pct);
-
-            // --- ALGORITMO DE FAIXAS (Baseado no Preço Por) ---
-            const bands = [
-                { min: 200, max: 99999, fixed: 0, text: "Preço > 200: Tabela Frete Completa" },
-                { min: 150, max: 199.99, fixed: 0, text: "Preço 150-199: Tabela Frete 150-199" },
-                { min: 120, max: 149.99, fixed: 0, text: "Preço 120-149: Tabela Frete 120-149" },
-                { min: 100, max: 119.99, fixed: 0, text: "Preço 100-119: Tabela Frete 100-119" },
-                { min: 79, max: 99.99, fixed: 0, text: "Preço 79-99: Tabela Frete 79-99" },
-                // ABAIXO DE 79: FRETE ZERO (ML PAGA), SÓ TEM TAXA FIXA
-                { min: 50, max: 78.99, fixed: 6.75, text: "Preço 50-79: Taxa Fixa R$ 6,75" }, 
-                { min: 29, max: 49.99, fixed: 6.50, text: "Preço 29-50: Taxa Fixa R$ 6,50" }, 
-                { min: 12.50, max: 28.99, fixed: 6.25, text: "Preço 12,50-29: Taxa Fixa R$ 6,25" },
-                { min: 0, max: 12.49, type: 'half_price', text: "Preço < 12,50: Taxa Fixa 50%" }
-            ];
-
-            let finalSellingPrice = 0; 
-            let finalFixedFee = 0;
-            let finalShipping = 0;
-            let found = false;
-            let activeRuleText = "";
-
-            for (let band of bands) {
-                // LÓGICA CRÍTICA: Se a faixa é abaixo de 79, OBRIGATORIAMENTE frete é 0 para vendedor.
-                let estimatedShipping = 0;
-                
-                if (band.min >= 79) {
-                    estimatedShipping = getOfficialShippingCost(band.min, weightClass);
-                }
-
-                let currentDenominator = denominator;
-                let currentFixed = band.fixed || 0;
-
-                // Regra de 50%
-                if (band.type === 'half_price') {
-                    currentDenominator = denominator - 0.5; 
-                }
-
-                if (currentDenominator <= 0) continue; 
-
-                let P_sell_candidate = (V + R + estimatedShipping + currentFixed) / currentDenominator;
-
-                // --- LÓGICA DE ARREDONDAMENTO AUTOMÁTICO (.90 / .99) ---
-                // Arredonda para cima para preservar margem
-                let intPart = Math.floor(P_sell_candidate);
-                let decPart = P_sell_candidate - intPart;
-                
-                if (decPart <= 0.90001) {
-                    P_sell_candidate = intPart + 0.90;
-                } else {
-                    P_sell_candidate = intPart + 0.99;
-                }
-
-                // Verifica se o preço candidato JÁ ARREDONDADO cai na faixa
-                if (P_sell_candidate >= band.min && P_sell_candidate <= band.max) {
-                    finalSellingPrice = P_sell_candidate;
-                    finalShipping = estimatedShipping;
-                    activeRuleText = band.text;
-                    
-                    if (band.type === 'half_price') {
-                        finalFixedFee = finalSellingPrice * 0.5; 
-                        activeRuleText += ` (R$ ${finalFixedFee.toFixed(2)})`;
-                    } else {
-                        finalFixedFee = band.fixed;
-                    }
-                    
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                // Fallback para valor alto
-                if (denominator > 0) {
-                     let estimatedShipping = getOfficialShippingCost(200, weightClass); 
-                     let rawPrice = (V + R + estimatedShipping + 0) / denominator;
-                     
-                     // Aplica arredondamento no fallback também
-                     let intPart = Math.floor(rawPrice);
-                     let decPart = rawPrice - intPart;
-                     if (decPart <= 0.90001) finalSellingPrice = intPart + 0.90;
-                     else finalSellingPrice = intPart + 0.99;
-
-                     finalShipping = estimatedShipping;
-                     finalFixedFee = 0;
-                     activeRuleText = "Fallback (Preço Alto)";
-                }
-            }
-
-            // --- CÁLCULO DO PREÇO "DE" ---
-            let finalListPrice = finalSellingPrice;
-            if (promo_pct < 1) { 
-                finalListPrice = finalSellingPrice / (1 - promo_pct);
-            }
-
-            // Custos Finais
-            const valCommission = finalSellingPrice * fee_pct;
-            const valTax = finalSellingPrice * tax_pct;
-            const valAds = finalSellingPrice * ads_pct;
-            const valPromoDiscount = finalListPrice - finalSellingPrice; 
-            
-            // Aqui mantemos Taxa Fixa e Comissão separadas para a UI
-            const valTotalFees = valCommission + finalFixedFee; // Para cálculo de lucro
-            const valTotalCosts = V + R;
-            const netProfit = finalSellingPrice - valTotalFees - finalShipping - valTax - valAds - valTotalCosts;
-            const realMargin = (netProfit / finalSellingPrice) * 100;
-
-            if (weightClass !== 'custom') {
-                document.getElementById('shippingCostUser').value = finalShipping.toFixed(2);
-            }
-
-            updateUI(finalListPrice, finalSellingPrice, valPromoDiscount, netProfit, realMargin, valCommission, finalFixedFee, finalShipping, valTax, valAds, valTotalCosts, R, promo_pct, activeRuleText, weightClass);
         }
 
         function updateUI(listPrice, sellingPrice, promoDiscount, profit, margin, commission, fixedFee, shipping, tax, ads, costs, returns, promoPct, ruleText, weightClass) {
@@ -1222,20 +1341,15 @@
 
             const marginEl = document.getElementById('displayNetMargin');
             marginEl.innerText = margin.toFixed(2) + '%';
-            
             if(margin < 0) marginEl.className = "font-bold text-lg text-red-500";
             else if(margin < 15) marginEl.className = "font-bold text-lg text-yellow-500";
             else marginEl.className = "font-bold text-lg text-green-500";
 
-            // Atualiza Tabela DRE
             document.getElementById('tblListPrice').innerText = fmt(listPrice);
             document.getElementById('tblPromoDiscount').innerText = "- " + fmt(promoDiscount);
             document.getElementById('tblSellingPrice').innerText = fmt(sellingPrice);
-            
-            // SEPARAÇÃO COMISSÃO E TAXA FIXA
             document.getElementById('tblCommission').innerText = "- " + fmt(commission);
-            document.getElementById('tblFixedFee').innerText = "- " + fmt(fixedFee); // Nova linha
-            
+            document.getElementById('tblFixedFee').innerText = "- " + fmt(fixedFee); 
             document.getElementById('tblShipping').innerText = "- " + fmt(shipping);
             document.getElementById('tblTax').innerText = "- " + fmt(tax);
             document.getElementById('tblAds').innerText = "- " + fmt(ads);
@@ -1243,11 +1357,9 @@
             document.getElementById('tblReturns').innerText = "- " + fmt(returns);
             document.getElementById('tblProfit').innerText = fmt(profit);
 
-            // Box de Regras
             const ruleBox = document.getElementById('freteRuleBox');
             document.getElementById('freteRuleText').innerText = ruleText;
             
-            // Estilo dinâmico do box de regra
             if (sellingPrice < 79) {
                 ruleBox.className = "mt-2 text-xs p-2 border rounded bg-blue-50 border-blue-200 text-blue-800";
                 document.getElementById('statusFreteBadge').innerText = "Frete Grátis (ML Paga)";
@@ -1261,14 +1373,13 @@
             const label = (shipping === 0) ? 'Grátis p/ Vend.' : 'Tabela Oficial';
             document.getElementById('freteLabel').innerText = label;
 
-            // ATUALIZA PAINEL DE ESTRATÉGIAS
             updateStrategyPanel(sellingPrice, margin, weightClass);
+            
+            // NOTE: Chart update removed as chart element was replaced by strategy panel
         }
 
-        window.onload = function() {
-            updateCommissionPreset();
-            calculate();
-        }
+        // Initialize (Only run if already logged in or after auth)
+        // Note: onAuthStateChanged handles the initial call to calculate/updateCommissionPreset
     </script>
 </body>
 </html>
